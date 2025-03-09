@@ -1,15 +1,20 @@
-import { TardinatorProfile } from "@tardinator/profile-sdk";
+import { PolymediaProfile } from "@polymedia/profile-sdk";
 import { ADDRESS_REGEX } from "@polymedia/suitcase-core";
-import { LinkToTardinator } from "@tardinator/suitcase-react";
+import { LinkToPolymedia } from "@polymedia/suitcase-react";
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { AppContext } from "./App";
 import "./styles/SearchProfiles.less";
 
+// Use existing type but rename it
+type TardinatorProfile = PolymediaProfile & {
+    xTwitter?: string | null;
+    telegram?: string | null;
+};
+
 const addressRegex = new RegExp(ADDRESS_REGEX, "g");
 
-export const PageProfileSearch: React.FC = () =>
-{
+export const PageProfileSearch: React.FC = () => {
     /* State */
 
     const {
@@ -46,6 +51,7 @@ export const PageProfileSearch: React.FC = () =>
                         name: "tardinator",
                         imageUrl: "https://placehold.co/200x200/FFE66D/000000?text=T",
                         description: "The original Tardinator",
+                        data: null,
                         owner: "0x1234567890abcdef",
                         xTwitter: "tardinator",
                         telegram: "tardinator_official"
@@ -55,6 +61,7 @@ export const PageProfileSearch: React.FC = () =>
                         name: "suifan",
                         imageUrl: "https://placehold.co/200x200/FF6B6B/000000?text=S",
                         description: "Sui ecosystem supporter",
+                        data: null,
                         owner: "0xabcdef1234567890",
                         xTwitter: "suifan",
                         telegram: "suifan_22"
@@ -64,6 +71,7 @@ export const PageProfileSearch: React.FC = () =>
                         name: "cryptolover",
                         imageUrl: "https://placehold.co/200x200/68D391/000000?text=C",
                         description: "Crypto enthusiast and NFT collector",
+                        data: null,
                         owner: "0x7890abcdef123456",
                         xTwitter: "crypto_lover",
                         telegram: "crypto_lover"
@@ -96,7 +104,7 @@ export const PageProfileSearch: React.FC = () =>
         setIsLoading(true);
         try {
             const profiles = await profileClient.getProfilesByOwner(addresses);
-            setResults(profiles);
+            setResults(profiles as Map<string, TardinatorProfile | null>);
         } catch (err) {
             console.warn("[searchByAddress]", err);
             setErrorMsg(String(err));
@@ -127,6 +135,7 @@ export const PageProfileSearch: React.FC = () =>
                         name: "tardinator_official",
                         imageUrl: "https://placehold.co/200x200/FFE66D/000000?text=T",
                         description: "Official Tardinator account",
+                        data: null,
                         owner: "0x1111222233334444",
                         xTwitter: "tardinator_app",
                         telegram: "tardinator_app"
@@ -139,6 +148,7 @@ export const PageProfileSearch: React.FC = () =>
                         name: "cryptomaster",
                         imageUrl: "https://placehold.co/200x200/FF6B6B/000000?text=C",
                         description: "Crypto enthusiast",
+                        data: null,
                         owner: "0x2222333344445555",
                         xTwitter: "crypto_master",
                         telegram: null
@@ -179,7 +189,7 @@ export const PageProfileSearch: React.FC = () =>
                 <div className="profile-card no-profile">
                     <div className="profile-card-content">
                         <div className="profile-card-address">
-                            <LinkToTardinator network={network} kind="address" addr={address || ""} />
+                            <LinkToPolymedia network={network} kind="address" addr={address || ""} />
                         </div>
                         <div className="profile-card-message">No profile found</div>
                     </div>
@@ -226,82 +236,84 @@ export const PageProfileSearch: React.FC = () =>
         );
     };
 
-    return <div id="page" className="page-search-profiles">
-        <h1>FIND TARDINATORS</h1>
+    return (
+        <div id="page" className="page-search-profiles">
+            <h1>FIND TARDINATORS</h1>
 
-        <div className="search-container">
-            <div className="search-tabs">
-                <button 
-                    className={`search-tab ${searchType === 'username' ? 'active' : ''}`}
-                    onClick={() => setSearchType('username')}
-                >
-                    Search by Username
-                </button>
-                <button 
-                    className={`search-tab ${searchType === 'address' ? 'active' : ''}`}
-                    onClick={() => setSearchType('address')}
-                >
-                    Search by Address
-                </button>
+            <div className="search-container">
+                <div className="search-tabs">
+                    <button 
+                        className={`search-tab ${searchType === 'username' ? 'active' : ''}`}
+                        onClick={() => setSearchType('username')}
+                    >
+                        Search by Username
+                    </button>
+                    <button 
+                        className={`search-tab ${searchType === 'address' ? 'active' : ''}`}
+                        onClick={() => setSearchType('address')}
+                    >
+                        Search by Address
+                    </button>
+                </div>
+
+                <div className="search-form">
+                    <div className="form-field">
+                        <input
+                            value={userInput}
+                            type="text"
+                            spellCheck="false" 
+                            autoCorrect="off" 
+                            autoComplete="off"
+                            onChange={onUserInputChange}
+                            placeholder={searchType === 'address' ? 
+                                "Enter Sui addresses" : 
+                                "Search by username (min 3 characters)"}
+                        />
+                        {searchType === 'address' && addressCount > 0 && (
+                            <div className="input-info">
+                                {addressCount} address{addressCount !== 1 && "es"}
+                            </div>
+                        )}
+                    </div>
+                    {isLoading && <div className="search-loading">Searching Tardinator profiles...</div>}
+                </div>
             </div>
 
-            <div className="search-form">
-                <div className="form-field">
-                    <input
-                        value={userInput}
-                        type="text"
-                        spellCheck="false" 
-                        autoCorrect="off" 
-                        autoComplete="off"
-                        onChange={onUserInputChange}
-                        placeholder={searchType === 'address' ? 
-                            "Enter Sui addresses" : 
-                            "Search by username (min 3 characters)"}
-                    />
-                    {searchType === 'address' && addressCount > 0 && (
-                        <div className="input-info">
-                            {addressCount} address{addressCount !== 1 && "es"}
+            {results && results.size > 0 && (
+                <div className="search-results">
+                    <h2>SEARCH RESULTS</h2>
+                    <div className="profile-grid">
+                        {Array.from(results.entries()).map(([addressOrId, profile]) => (
+                            <ProfileCard key={addressOrId} profile={profile} address={addressOrId} />
+                        ))}
+                    </div>
+                </div>
+            )}
+            
+            {results && results.size === 0 && (
+                <div className="no-results">
+                    <h2>No profiles found</h2>
+                    <p>Try a different search term or create your own Tardinator profile!</p>
+                    <Link to="/manage" className="btn create-profile-btn">Create Profile</Link>
+                </div>
+            )}
+
+            {errorMsg && <div className="error-message">{errorMsg}</div>}
+
+            {(!results || results.size === 0) && !isLoading && !errorMsg && (
+                <div className="popular-profiles">
+                    <h2>POPULAR TARDINATORS</h2>
+                    {isLoadingPopular ? (
+                        <div className="loading-popular">Loading popular profiles...</div>
+                    ) : (
+                        <div className="profile-grid">
+                            {popularProfiles.map(profile => (
+                                <ProfileCard key={profile.id} profile={profile} />
+                            ))}
                         </div>
                     )}
                 </div>
-                {isLoading && <div className="search-loading">Searching Tardinator profiles...</div>}
-            </div>
+            )}
         </div>
-
-        {results && results.size > 0 && (
-            <div className="search-results">
-                <h2>SEARCH RESULTS</h2>
-                <div className="profile-grid">
-                    {Array.from(results.entries()).map(([addressOrId, profile]) => (
-                        <ProfileCard key={addressOrId} profile={profile} address={addressOrId} />
-                    ))}
-                </div>
-            </div>
-        )}
-        
-        {results && results.size === 0 && (
-            <div className="no-results">
-                <h2>No profiles found</h2>
-                <p>Try a different search term or create your own Tardinator profile!</p>
-                <Link to="/manage" className="btn create-profile-btn">Create Profile</Link>
-            </div>
-        )}
-
-        {errorMsg && <div className="error-message">{errorMsg}</div>}
-
-        {(!results || results.size === 0) && !isLoading && !errorMsg && (
-            <div className="popular-profiles">
-                <h2>POPULAR TARDINATORS</h2>
-                {isLoadingPopular ? (
-                    <div className="loading-popular">Loading popular profiles...</div>
-                ) : (
-                    <div className="profile-grid">
-                        {popularProfiles.map(profile => (
-                            <ProfileCard key={profile.id} profile={profile} />
-                        ))}
-                    </div>
-                )}
-            </div>
-        )}
-    </div>;
+    );
 };

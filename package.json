@@ -1,14 +1,14 @@
 {
     "private": true,
     "version": "0.0.0",
-    "name": "polymedia-profile-monorepo",
-    "author": "@juzybits (https://polymedia.app)",
-    "homepage": "https://profile.polymedia.app",
+    "name": "tardinator-profile-monorepo",
+    "author": "@tardinator (https://tardinator.app)",
+    "homepage": "https://profile.tardinator.app",
     "description": "Fully on-chain profile system on Sui",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/juzybits/polymedia-profile"
+        "url": "https://github.com/cannedoxygen/profiles"
     },
     "keywords": [],
     "scripts": {
