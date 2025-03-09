@@ -1,0 +1,47 @@
+{
+    "private": false,
+    "version": "2.0.0",
+    "name": "@polymedia/profile-sdk",
+    "author": "@juzybits (https://polymedia.app)",
+    "homepage": "https://profile.polymedia.app",
+    "description": "An SDK to interact with Polymedia Profile objects on the Sui network",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/juzybits/polymedia-profile"
+    },
+    "keywords": [
+        "polymedia",
+        "sui",
+        "profile"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
+        "clean": "rm -rf dist/ node_modules/ .turbo/",
+        "dev": "tsc --watch -p tsconfig.esm.json",
+        "lint": "eslint src/ --report-unused-disable-directives --max-warnings 0",
+        "prepublishOnly": "rm -rf dist/ && pnpm build",
+        "typecheck": "tsc -p tsconfig.esm.json"
+    },
+    "peerDependencies": {
+        "@mysten/bcs": "^1.0.2",
+        "@mysten/sui": "^1.0.3"
+    },
+    "type": "module",
+    "sideEffects": false,
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "dist/"
+    ],
+    "types": "./dist/cjs/index.d.ts",
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "exports": {
+        ".": {
+            "require": "./dist/cjs/index.js",
+            "import": "./dist/esm/index.js"
+        }
+    }
+}
