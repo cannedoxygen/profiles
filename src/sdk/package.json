@@ -2,8 +2,8 @@
     "private": false,
     "version": "2.0.0",
     "name": "@tardinator/profile-sdk",
-    "author": "@tardinator (https://tardinator.app)",
-    "homepage": "https://profile.tardinator.app",
+    "author": "Tardinator Team",
+    "homepage": "https://tardinator.app",
     "description": "An SDK to interact with Tardinator Profile objects on the Sui network",
     "license": "Apache-2.0",
     "repository": {

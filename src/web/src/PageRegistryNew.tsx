@@ -1,6 +1,6 @@
 import { useCurrentAccount, useSignTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import { create_registry } from "@polymedia/profile-sdk";
+import { create_registry } from "@tardinator/profile-sdk";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { AppContext } from "./App";
@@ -9,7 +9,7 @@ import { notifyError } from "./components/Notification";
 export function PageRegistryNew()
 {
     useEffect(() => {
-        document.title = "Polymedia Profile - New Registry";
+        document.title = "Tardinator Profile - New Registry";
     }, []);
 
     const suiClient = useSuiClient();

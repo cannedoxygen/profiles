@@ -20,7 +20,6 @@ import { PageNotFound } from "./PageNotFound";
 import { PageProfileManage } from "./PageProfileManage";
 import { PageProfileSearch } from "./PageProfileSearch";
 import { PageProfileView } from "./PageProfileView";
-import { PageNFTGallery } from "./PageNFTGallery";
 import { PageRegistryNew } from "./PageRegistryNew";
 import { notifyError } from "./components/Notification";
 import "./styles/App.less";
@@ -38,7 +37,6 @@ export const AppRouter: React.FC = () => {
                 <Route path="registry/new" element={<PageRegistryNew />} />
                 <Route path="search" element={<PageProfileSearch />} />
                 <Route path="view/:profileId" element={<PageProfileView />} />
-                <Route path="nfts" element={<PageNFTGallery />} />
                 <Route path="*" element={<PageNotFound />} />
             </Route>
         </Routes>

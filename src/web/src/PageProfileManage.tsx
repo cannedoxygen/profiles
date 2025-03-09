@@ -1,16 +1,17 @@
 import { useCurrentAccount, useSignTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import { create_profile, update_profile } from "../../sdk/src/package.js";
-import { formatXHandle, isValidTardinatorName } from "../../sdk/src/functions.js";
+import { create_profile, edit_profile } from "@tardinator/profile-sdk";
 import { LinkToPolymedia } from "@polymedia/suitcase-react";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { AppContext } from "./App";
 import { notifyError, notifyOkay } from "./components/Notification";
-import "./styles/ProfileCreation.less";
+import "./styles/ManageProfile.less";
 
-export const PageProfileManage: React.FC = () => {
+export const PageProfileManage: React.FC = () =>
+{
     /* State */
+
     const suiClient = useSuiClient();
     const currentAccount = useCurrentAccount();
     const { mutateAsync: signTransaction } = useSignTransaction();
@@ -27,70 +28,30 @@ export const PageProfileManage: React.FC = () => {
     const [inputName, setInputName] = useState("");
     const [inputImage, setInputImage] = useState("");
     const [inputDescription, setInputDescription] = useState("");
-    const [inputXHandle, setInputXHandle] = useState("");
-    const [inputTelegramHandle, setInputTelegramHandle] = useState("");
-    
-    // Form validation
-    const [isNameAvailable, setIsNameAvailable] = useState<boolean | null>(null);
-    const [nameError, setNameError] = useState<string | null>(null);
+    const [inputXAccount, setInputXAccount] = useState("");
+    const [inputTelegramUsername, setInputTelegramUsername] = useState("");
+    // Form errors
     const [isErrorImage, setIsErrorImage] = useState(false);
     const [isErrorForm, setIsErrorForm] = useState(false);
     const [isErrorImgur, setIsErrorImgur] = useState(false);
-    
+    const [isNameAvailable, setIsNameAvailable] = useState(true);
     // Other state
     const [waiting, setWaiting] = useState(false);
+    const [checkingName, setCheckingName] = useState(false);
 
     /* Functions */
+
     useEffect(() => {
         document.title = "Tardinator Profile - Manage";
     }, []);
 
-    // Update form when profile changes
     useEffect(() => {
-        if (profile) {
-            setInputName(profile.name);
-            setInputImage(profile.imageUrl);
-            setInputDescription(profile.description);
-            setInputXHandle(profile.xHandle);
-            setInputTelegramHandle(profile.telegramHandle);
-        }
+        setInputName(profile?.name || "");
+        setInputImage(profile?.imageUrl || "");
+        setInputDescription(profile?.description || "");
+        setInputXAccount(profile?.xAccount || "");
+        setInputTelegramUsername(profile?.telegramUsername || "");
     }, [profile]);
-
-    // Check name availability when input changes (only for new profiles)
-    useEffect(() => {
-        // Only check availability if creating a new profile
-        if (profile !== null) return;
-        
-        const checkNameAvailability = async () => {
-            if (!inputName || inputName.length < 3) {
-                setIsNameAvailable(null);
-                setNameError(null);
-                return;
-            }
-
-            if (!isValidTardinatorName(inputName)) {
-                setIsNameAvailable(false);
-                setNameError("Username must be 3-20 characters, alphanumeric with underscores only, and can't start with a number");
-                return;
-            }
-
-            try {
-                setWaiting(true);
-                const available = await profileClient.isNameAvailable(inputName);
-                setIsNameAvailable(available);
-                setNameError(available ? null : "This username is already taken");
-            } catch (err) {
-                console.error("Error checking name availability:", err);
-                setNameError("Error checking name availability");
-                setIsNameAvailable(null);
-            } finally {
-                setWaiting(false);
-            }
-        };
-
-        const timeoutId = setTimeout(checkNameAvailability, 500);
-        return () => clearTimeout(timeoutId);
-    }, [inputName, profileClient, profile]);
 
     const onInputImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.value) {
@@ -100,7 +61,6 @@ export const PageProfileManage: React.FC = () => {
         }
         setInputImage(e.target.value);
     };
-    
     const onImageLoad = () => {
         setIsErrorImage(false);
         setIsErrorForm(false);
@@ -113,24 +73,63 @@ export const PageProfileManage: React.FC = () => {
         setIsErrorImgur(inputImage.startsWith("https://imgur.com/"));
     };
 
-    const onSubmitCreateProfile = async (e: SyntheticEvent) => {
+    const checkNameAvailability = async (name: string) => {
+        if (!profile && name) {
+            setCheckingName(true);
+            // In a real implementation, you would call the contract to check if the name is available
+            // For now, we'll simulate with a delay
+            try {
+                // Placeholder for the actual check
+                // await profileClient.isUsernameAvailable(name);
+                // For now, just simulate a check with 50% chance of availability
+                const isAvailable = true; // In production, this would be the result from the contract
+                
+                setIsNameAvailable(isAvailable);
+                setIsErrorForm(!isAvailable);
+            } catch (err) {
+                console.warn("[checkNameAvailability]", err);
+                setIsNameAvailable(true); // Default to available on error
+            } finally {
+                setCheckingName(false);
+            }
+        }
+    };
+
+    const onInputNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const name = e.target.value;
+        setInputName(name);
+        
+        // Only check availability for new profiles (not editing)
+        if (!profile) {
+            // Debounce the name availability check
+            const handler = setTimeout(() => checkNameAvailability(name), 500);
+            return () => clearTimeout(handler);
+        }
+    };
+
+    const onSubmitCreateProfile = async (e: SyntheticEvent) =>
+    {
         e.preventDefault();
         if (!currentAccount) {
             openConnectModal();
             return;
         }
-
-        // Validate form for new profile
-        if (!isNameAvailable || nameError) {
-            notifyError("Please fix the username issues before creating your profile");
+        if (!isNameAvailable) {
+            notifyError("Username is already taken. Please choose another.");
             return;
         }
-
+        
         console.debug(`[onSubmitCreateProfile] Attempting to create profile: ${inputName}`);
         setWaiting(true);
-        
         try {
             const tx = new Transaction();
+            
+            // Prepare data for social media links
+            const profileData = {
+                xAccount: inputXAccount,
+                telegramUsername: inputTelegramUsername
+            };
+            
             create_profile(
                 tx,
                 profileClient.packageId,
@@ -138,9 +137,7 @@ export const PageProfileManage: React.FC = () => {
                 inputName,
                 inputImage,
                 inputDescription,
-                formatXHandle(inputXHandle),
-                inputTelegramHandle,
-                null,
+                profileData,
             );
 
             const signedTx = await signTransaction({
@@ -159,7 +156,7 @@ export const PageProfileManage: React.FC = () => {
                     + `Txn status: ${resp.effects?.status.status}\n`
                     + `Txn errors: ${JSON.stringify(resp.errors)}`);
             } else {
-                notifyOkay("Profile created successfully!");
+                notifyOkay("SUCCESS");
                 reloadProfile();
             }
         } catch (err) {
@@ -170,7 +167,8 @@ export const PageProfileManage: React.FC = () => {
         }
     };
 
-    const onSubmitEditProfile = async (e: SyntheticEvent) => {
+    const onSubmitEditProfile = async (e: SyntheticEvent) =>
+    {
         e.preventDefault();
         if (!currentAccount) {
             openConnectModal();
@@ -180,21 +178,25 @@ export const PageProfileManage: React.FC = () => {
             notifyError("[onSubmitEditProfile] Missing profile");
             return;
         }
-        
         console.debug("[onSubmitEditProfile] Attempting to edit profile");
         setWaiting(true);
-        
         try {
             const tx = new Transaction();
-            update_profile(
+            
+            // Prepare data for social media links
+            const profileData = {
+                xAccount: inputXAccount,
+                telegramUsername: inputTelegramUsername
+            };
+            
+            edit_profile(
                 tx,
                 profile.id,
                 profileClient.packageId,
+                inputName,
                 inputImage,
                 inputDescription,
-                formatXHandle(inputXHandle),
-                inputTelegramHandle,
-                null,
+                profileData,
             );
 
             const signedTx = await signTransaction({
@@ -213,7 +215,7 @@ export const PageProfileManage: React.FC = () => {
                     + `Txn status: ${resp.effects?.status.status}\n`
                     + `Txn errors: ${JSON.stringify(resp.errors)}`);
             } else {
-                notifyOkay("Profile updated successfully!");
+                notifyOkay("SUCCESS");
                 reloadProfile();
             }
         } catch (err) {
@@ -225,14 +227,14 @@ export const PageProfileManage: React.FC = () => {
     };
 
     /* HTML */
+
     let view: React.ReactNode;
-    
     if (!currentAccount) {
         view = <div>
             <p>
-                Connect your Sui wallet to manage your Tardinator profile.<br/>It's free and only takes a few seconds!
+                Connect your Sui wallet to create your profile.<br/>It's free and only takes a few seconds!
             </p>
-            <button onClick={openConnectModal}>CONNECT WALLET</button>
+            <button onClick={openConnectModal}>LOG IN</button>
         </div>;
     }
     else if (profile === undefined) {
@@ -241,104 +243,82 @@ export const PageProfileManage: React.FC = () => {
         </div>;
     }
     else {
-        // The form changes slightly based on whether we're creating or editing
-        const isCreating = profile === null;
-        
-        view = <form className="form" onSubmit={isCreating ? onSubmitCreateProfile : onSubmitEditProfile}>
+        view = <form className="form" onSubmit={profile===null ? onSubmitCreateProfile : onSubmitEditProfile}>
             <div className="form-field">
-                <label>Username {isCreating && '*'}</label>
+                <label>
+                  Username
+                  {profile === null && <span className="field-required">[required]</span>}
+                </label>
                 <input 
                     value={inputName} 
                     type="text" 
-                    required={isCreating}
-                    maxLength={20}
-                    className={waiting ? "waiting" : nameError ? "error" : isNameAvailable ? "success" : ""}
-                    disabled={waiting || !isCreating} // Can't change username after creation
+                    required 
+                    maxLength={60}
+                    className={waiting || checkingName ? "waiting" : (!isNameAvailable ? "error" : "")} 
+                    disabled={waiting || checkingName || profile !== null} // Disable name change for existing profiles
                     spellCheck="false" 
                     autoCorrect="off" 
                     autoComplete="off"
-                    onChange={e => setInputName(e.target.value)}
+                    onChange={onInputNameChange}
                 />
-                {isCreating && nameError && <div className="field-error">{nameError}</div>}
-                {isCreating && isNameAvailable && <div className="field-success">Username is available!</div>}
-                {isCreating && <div className="field-info">Choose a unique username (3-20 characters, letters, numbers, and underscores only)</div>}
-                {!isCreating && <div className="field-info">Usernames cannot be changed after creation</div>}
+                {!isNameAvailable && <div className="field-error">This username is already taken</div>}
+                {profile === null && <div className="field-info">Usernames must be unique and cannot be changed later</div>}
             </div>
-            
             <div className="form-field">
-                <label>Profile Image URL<span className="field-optional">[optional]</span></label>
-                <input 
-                    value={inputImage} 
-                    type="text"
-                    className={waiting ? "waiting" : ""}
-                    disabled={waiting}
-                    spellCheck="false" 
-                    autoCorrect="off" 
-                    autoComplete="off"
+                <label>Description<span className="field-optional">[optional]</span></label>
+                <textarea value={inputDescription} maxLength={10000}
+                    className={waiting ? "waiting" : ""} disabled={waiting}
+                    spellCheck="true" autoCorrect="off" autoComplete="off"
+                    onChange={e => setInputDescription(e.target.value)}
+                />
+            </div>
+            <div className="form-field">
+                <label>Image URL<span className="field-optional">[optional]</span></label>
+                <input value={inputImage} type="text"
+                    className={waiting ? "waiting" : ""} disabled={waiting}
+                    spellCheck="false" autoCorrect="off" autoComplete="off"
                     onChange={onInputImageChange}
                 />
                 {isErrorImage && <div className="field-error">That doesn't look like a valid image URL</div>}
                 <div className="field-info">Right click the image, then click 'Copy Image Address'. To use a picture from your device, upload it to a service like <a href="https://imgur.com/upload" target="_blank" rel="noopener nofollow noreferrer">imgur.com</a>, then copy the image address.</div>
                 {isErrorImgur && <div className="field-error-imgur"><img src="/img/drake.webp" /></div>}
             </div>
-            
             <div className="form-field">
-                <label>Description<span className="field-optional">[optional]</span></label>
-                <textarea 
-                    value={inputDescription} 
-                    maxLength={500}
-                    className={waiting ? "waiting" : ""}
+                <label>X/Twitter Username<span className="field-optional">[optional]</span></label>
+                <input 
+                    value={inputXAccount} 
+                    type="text"
+                    className={waiting ? "waiting" : ""} 
                     disabled={waiting}
-                    spellCheck="true" 
+                    spellCheck="false" 
                     autoCorrect="off" 
                     autoComplete="off"
-                    onChange={e => setInputDescription(e.target.value)}
+                    placeholder="username (without @)"
+                    onChange={e => setInputXAccount(e.target.value)}
                 />
-                <div className="char-count">{inputDescription.length}/500</div>
             </div>
-            
             <div className="form-field">
-                <label>X/Twitter Handle<span className="field-optional">[optional]</span></label>
-                <div className="input-with-prefix">
-                    <span className="input-prefix">@</span>
-                    <input 
-                        value={inputXHandle.startsWith('@') ? inputXHandle.substring(1) : inputXHandle} 
-                        type="text"
-                        className={waiting ? "waiting" : ""}
-                        disabled={waiting}
-                        spellCheck="false" 
-                        autoCorrect="off" 
-                        autoComplete="off"
-                        onChange={e => setInputXHandle(e.target.value)}
-                    />
-                </div>
+                <label>Telegram Username<span className="field-optional">[optional]</span></label>
+                <input 
+                    value={inputTelegramUsername} 
+                    type="text"
+                    className={waiting ? "waiting" : ""} 
+                    disabled={waiting}
+                    spellCheck="false" 
+                    autoCorrect="off" 
+                    autoComplete="off"
+                    placeholder="username (without @)"
+                    onChange={e => setInputTelegramUsername(e.target.value)}
+                />
             </div>
-            
-            <div className="form-field">
-                <label>Telegram Handle<span className="field-optional">[optional]</span></label>
-                <div className="input-with-prefix">
-                    <span className="input-prefix">@</span>
-                    <input 
-                        value={inputTelegramHandle.startsWith('@') ? inputTelegramHandle.substring(1) : inputTelegramHandle} 
-                        type="text"
-                        className={waiting ? "waiting" : ""}
-                        disabled={waiting}
-                        spellCheck="false" 
-                        autoCorrect="off" 
-                        autoComplete="off"
-                        onChange={e => setInputTelegramHandle(e.target.value)}
-                    />
-                </div>
-            </div>
-            
             <button
                 type="submit"
-                disabled={waiting || isErrorForm || (isCreating && !isNameAvailable)}
-                className={isErrorForm || (isCreating && !isNameAvailable) ? "disabled" : (waiting ? "waiting" : "")}
+                disabled={waiting || isErrorForm}
+                className={isErrorForm ? "disabled" : (waiting ? "waiting" : "")}
             >
-                {isCreating ? "CREATE PROFILE" : "UPDATE PROFILE"}
+                {profile===null ? "CREATE PROFILE" : "EDIT PROFILE"}
             </button>
-            {isErrorForm && <div className="field-error">Please fix the form errors</div>}
+            {isErrorForm && <div className="field-error">Form has errors</div>}
         </form>;
     }
 

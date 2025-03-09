@@ -1,5 +1,6 @@
 import { TardinatorProfile } from "@tardinator/profile-sdk";
-import { LinkToTardinator } from "@tardinator/suitcase-react";
+import { create_profile, edit_profile } from "@tardinator/profile-sdk";
+import { LinkToPolymedia } from "@polymedia/suitcase-react";
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { AppContext } from "./App";

@@ -2,7 +2,7 @@
     "private": true,
     "version": "0.0.0",
     "name": "tardinator-profile-monorepo",
-    "author": "@tardinator (https://tardinator.app)",
+    "author": "Tardinator Team",
     "homepage": "https://profile.tardinator.app",
     "description": "Fully on-chain profile system on Sui",
     "license": "Apache-2.0",

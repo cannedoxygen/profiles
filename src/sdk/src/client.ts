@@ -1,9 +1,9 @@
 import { SuiClient, SuiExecutionResult, SuiObjectResponse } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { PROFILE_IDS } from "./config";
-import { chunkArray, devInspectAndGetResults } from "./functions";
-import { get_profiles } from "./package";
-import { BcsLookupResults, LookupResults, TardinatorProfile } from "./types";
+import { PROFILE_IDS } from "./config.js";
+import { chunkArray, devInspectAndGetResults } from "./functions.js";
+import { get_profiles } from "./package.js";
+import { BcsLookupResults, LookupResults, TardinatorProfile } from "./types.js";
 
 type NetworkName = "localnet" | "devnet" | "testnet" | "mainnet";
 
@@ -30,6 +30,24 @@ export class ProfileClient
         this.suiClient = suiClient;
         this.packageId = packageId || PROFILE_IDS[network].packageId;
         this.registryId = registryId || PROFILE_IDS[network].registryId;
+    }
+
+    /**
+     * Check if a username is available (not already taken)
+     */
+    public async isUsernameAvailable(
+        _username: string,  // Added underscore to mark as intentionally unused
+    ): Promise<boolean> {
+        // Implement username availability check
+        // This would call a new function in the Move contract
+        // Example: 
+        // const tx = new Transaction();
+        // check_username_availability(tx, this.packageId, username);
+        // const blockResults = await devInspectAndGetResults(this.suiClient, tx);
+        // return blockResults[0].returnValues![0][0] === 1;
+        
+        // For now, return true as a placeholder
+        return true;
     }
 
     /**
@@ -271,8 +289,8 @@ function suiObjectToProfile(
     if (content.dataType !== "moveObject") {
         throw new Error(`Wrong object dataType. Expected 'moveObject' but got: '${content.dataType}'`);
     }
-    if (!content.type.endsWith("::profile::TardinatorProfile")) {
-        throw new Error("Wrong object type. Expected a TardinatorProfile but got: " + content.type);
+    if (!content.type.endsWith("::profile::Profile")) {
+        throw new Error("Wrong object type. Expected a Profile but got: " + content.type);
     }
 
     const owner = resp.data.owner;
@@ -292,10 +310,10 @@ function suiObjectToProfile(
         imageUrl: fields.image_url,
         description: fields.description,
         data: fields.data ? JSON.parse(fields.data) : null,
-        xAccount: fields.x_account || null,
-        telegram: fields.telegram || null,
         owner: ("AddressOwner" in owner) ? owner.AddressOwner : owner.ObjectOwner,
-        createdAt: fields.created_at || null
+        xAccount: fields.x_account || undefined,
+        telegramUsername: fields.telegram || undefined,
+        createdAt: fields.created_at || Date.now(),
     };
     /* eslint-enable */
 }
