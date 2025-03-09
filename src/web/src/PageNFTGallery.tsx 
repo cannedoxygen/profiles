@@ -1,0 +1,289 @@
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import { AppContext } from "./App";
+import { notifyError } from "./components/Notification";
+import "./styles/NFTGallery.less";
+
+type NFTData = {
+    id: string;
+    name: string;
+    description?: string;
+    imageUrl: string;
+    collection?: string;
+    attributes?: Array<{trait_type: string, value: string}>;
+};
+
+export const PageNFTGallery: React.FC = () => {
+    const { 
+        profile,
+        openConnectModal
+    } = useOutletContext<AppContext>();
+    
+    const suiClient = useSuiClient();
+    const currentAccount = useCurrentAccount();
+    
+    const [nfts, setNfts] = useState<NFTData[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [selectedNFT, setSelectedNFT] = useState<NFTData | null>(null);
+    const [filter, setFilter] = useState<string>("");
+    const [collections, setCollections] = useState<Set<string>>(new Set());
+    const [selectedCollection, setSelectedCollection] = useState<string>("");
+    
+    useEffect(() => {
+        document.title = "Tardinator - NFT Gallery";
+        
+        if (currentAccount) {
+            loadNFTs();
+        }
+    }, [currentAccount]);
+    
+    const loadNFTs = async () => {
+        if (!currentAccount) return;
+        
+        setIsLoading(true);
+        try {
+            // In a real implementation, this would fetch NFTs from the Sui blockchain
+            // For demo purposes, we'll use some mock data
+            setTimeout(() => {
+                const mockNFTs: NFTData[] = [
+                    {
+                        id: "0x123456...abc1",
+                        name: "Tardinator #1234",
+                        description: "An exclusive Tardinator NFT with rare attributes",
+                        imageUrl: "https://placehold.co/400x400/FFE66D/000000?text=Tardinator+%231234",
+                        collection: "Tardinator Genesis",
+                        attributes: [
+                            { trait_type: "Rarity", value: "Legendary" },
+                            { trait_type: "Background", value: "Space" },
+                            { trait_type: "Outfit", value: "Cyberpunk" }
+                        ]
+                    },
+                    {
+                        id: "0x123456...abc2",
+                        name: "SuiPunk #567",
+                        description: "Punk aesthetic meets Sui blockchain",
+                        imageUrl: "https://placehold.co/400x400/FF6B6B/000000?text=SuiPunk+%23567",
+                        collection: "SuiPunks",
+                        attributes: [
+                            { trait_type: "Rarity", value: "Rare" },
+                            { trait_type: "Background", value: "City" },
+                            { trait_type: "Accessory", value: "Mohawk" }
+                        ]
+                    },
+                    {
+                        id: "0x123456...abc3",
+                        name: "CryptoArt #42",
+                        description: "Digital art masterpiece on the blockchain",
+                        imageUrl: "https://placehold.co/400x400/68D391/000000?text=CryptoArt+%2342",
+                        collection: "CryptoArt Series",
+                        attributes: [
+                            { trait_type: "Rarity", value: "Common" },
+                            { trait_type: "Style", value: "Abstract" },
+                            { trait_type: "Colors", value: "Vibrant" }
+                        ]
+                    },
+                    {
+                        id: "0x123456...abc4",
+                        name: "Tardinator #2222",
+                        description: "Special edition Tardinator with unique traits",
+                        imageUrl: "https://placehold.co/400x400/FFE66D/000000?text=Tardinator+%232222",
+                        collection: "Tardinator Genesis",
+                        attributes: [
+                            { trait_type: "Rarity", value: "Epic" },
+                            { trait_type: "Background", value: "Mountain" },
+                            { trait_type: "Outfit", value: "Samurai" }
+                        ]
+                    },
+                    {
+                        id: "0x123456...abc5",
+                        name: "SuiKitty #789",
+                        description: "Cute digital kitty on Sui blockchain",
+                        imageUrl: "https://placehold.co/400x400/FF9F9F/000000?text=SuiKitty+%23789",
+                        collection: "SuiKitties",
+                        attributes: [
+                            { trait_type: "Rarity", value: "Uncommon" },
+                            { trait_type: "Fur", value: "Calico" },
+                            { trait_type: "Eyes", value: "Blue" }
+                        ]
+                    }
+                ];
+                
+                // Extract unique collections
+                const collectionSet = new Set<string>();
+                mockNFTs.forEach(nft => {
+                    if (nft.collection) {
+                        collectionSet.add(nft.collection);
+                    }
+                });
+                
+                setNfts(mockNFTs);
+                setCollections(collectionSet);
+                setIsLoading(false);
+            }, 1500);
+        } catch (err) {
+            console.warn("[loadNFTs]", err);
+            notifyError("Failed to load NFTs: " + String(err));
+            setIsLoading(false);
+        }
+    };
+    
+    const handleNFTClick = (nft: NFTData) => {
+        setSelectedNFT(nft);
+    };
+    
+    const closeNFTDetails = () => {
+        setSelectedNFT(null);
+    };
+    
+    const filteredNFTs = nfts.filter(nft => {
+        // Filter by search text
+        const matchesSearch = filter === "" || 
+            nft.name.toLowerCase().includes(filter.toLowerCase()) ||
+            (nft.description && nft.description.toLowerCase().includes(filter.toLowerCase()));
+            
+        // Filter by collection
+        const matchesCollection = selectedCollection === "" || 
+            nft.collection === selectedCollection;
+            
+        return matchesSearch && matchesCollection;
+    });
+
+    // Login prompt for users without a connected wallet
+    if (!currentAccount) {
+        return (
+            <div id="page" className="page-nft-gallery">
+                <div className="login-prompt">
+                    <h1>NFT GALLERY</h1>
+                    <p>Connect your wallet to view your NFT collection.</p>
+                    <button className="connect-button" onClick={openConnectModal}>CONNECT WALLET</button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div id="page" className="page-nft-gallery">
+            <h1>MY NFT GALLERY</h1>
+            
+            <div className="gallery-controls">
+                <div className="search-filter">
+                    <input
+                        type="text"
+                        placeholder="Search NFTs..."
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                    />
+                </div>
+                
+                <div className="collection-filter">
+                    <select 
+                        value={selectedCollection}
+                        onChange={(e) => setSelectedCollection(e.target.value)}
+                    >
+                        <option value="">All Collections</option>
+                        {Array.from(collections).map((collection) => (
+                            <option key={collection} value={collection}>
+                                {collection}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+            
+            {isLoading ? (
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading your NFT collection...</p>
+                </div>
+            ) : filteredNFTs.length > 0 ? (
+                <div className="nft-grid">
+                    {filteredNFTs.map((nft) => (
+                        <div 
+                            key={nft.id} 
+                            className="nft-card"
+                            onClick={() => handleNFTClick(nft)}
+                        >
+                            <div className="nft-image-container">
+                                <img src={nft.imageUrl} alt={nft.name} />
+                            </div>
+                            <div className="nft-info">
+                                <h3 className="nft-name">{nft.name}</h3>
+                                {nft.collection && (
+                                    <div className="nft-collection">{nft.collection}</div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="no-nfts">
+                    <p>No NFTs found{filter || selectedCollection ? " matching your search" : ""}.</p>
+                    {(filter || selectedCollection) && (
+                        <button 
+                            className="clear-filters-button"
+                            onClick={() => {
+                                setFilter("");
+                                setSelectedCollection("");
+                            }}
+                        >
+                            Clear Filters
+                        </button>
+                    )}
+                </div>
+            )}
+            
+            {/* NFT Detail Modal */}
+            {selectedNFT && (
+                <div className="nft-modal-overlay" onClick={closeNFTDetails}>
+                    <div className="nft-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-modal" onClick={closeNFTDetails}>×</button>
+                        
+                        <div className="nft-modal-content">
+                            <div className="nft-modal-image">
+                                <img src={selectedNFT.imageUrl} alt={selectedNFT.name} />
+                            </div>
+                            
+                            <div className="nft-modal-details">
+                                <h2>{selectedNFT.name}</h2>
+                                
+                                {selectedNFT.collection && (
+                                    <div className="nft-detail-collection">
+                                        <span className="detail-label">Collection:</span>
+                                        <span className="detail-value">{selectedNFT.collection}</span>
+                                    </div>
+                                )}
+                                
+                                {selectedNFT.description && (
+                                    <div className="nft-detail-description">
+                                        <span className="detail-label">Description:</span>
+                                        <p>{selectedNFT.description}</p>
+                                    </div>
+                                )}
+                                
+                                <div className="nft-detail-id">
+                                    <span className="detail-label">Token ID:</span>
+                                    <span className="detail-value">{selectedNFT.id}</span>
+                                </div>
+                                
+                                {selectedNFT.attributes && selectedNFT.attributes.length > 0 && (
+                                    <div className="nft-attributes">
+                                        <span className="detail-label">Attributes:</span>
+                                        <div className="attributes-grid">
+                                            {selectedNFT.attributes.map((attr, index) => (
+                                                <div key={index} className="attribute-item">
+                                                    <div className="attribute-type">{attr.trait_type}</div>
+                                                    <div className="attribute-value">{attr.value}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};

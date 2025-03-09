@@ -1,18 +1,276 @@
 @import './variables.less';
 
-#page.page-view-profile #profile-card {
-    overflow-wrap: anywhere;
-    .section {
-        margin-bottom: 0.5em;
+#page.page-view-profile {
+    max-width: 800px;
+    margin: 0 auto;
+    
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1em;
+        margin: 3em 0;
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #FFE66D;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     }
-    .profile-image {
-        img {
-            border-radius: 0.9em;
-            border: 4px solid var(--text-color);;
-            box-sizing: border-box;
-            display: block;
+    
+    .loading-spinner.small {
+        width: 24px;
+        height: 24px;
+        border-width: 3px;
+    }
+    
+    .profile-not-found {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 2em;
+        text-align: center;
+        
+        h2 {
+            color: #FF6B6B;
+            margin-top: 0;
+        }
+        
+        p {
+            color: #aaa;
+        }
+    }
+    
+    .profile-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2em;
+    }
+    
+    .profile-header {
+        display: flex;
+        gap: 2em;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 2em;
+        
+        @media (max-width: @mobile-width) {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .profile-image-container {
+            flex: 0 0 auto;
+            
+            .profile-image {
+                width: 150px;
+                height: 150px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 4px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+        
+        .profile-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            
+            .profile-name {
+                font-size: 2em;
+                margin: 0 0 0.5em;
+                background: linear-gradient(90deg, #FF6B6B, #FFE66D);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            
+            .profile-description {
+                font-size: 1.1em;
+                margin-bottom: 1.5em;
+                line-height: 1.6;
+                color: #ddd;
+            }
+            
+            .profile-social {
+                display: flex;
+                gap: 1em;
+                margin-top: auto;
+                
+                @media (max-width: @mobile-width) {
+                    justify-content: center;
+                }
+                
+                .profile-social-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5em;
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 2em;
+                    padding: 0.5em 1em;
+                    transition: all 0.2s ease;
+                    color: var(--text-color);
+                    text-decoration: none;
+                    
+                    &:hover {
+                        transform: translateY(-3px);
+                        background: rgba(0, 0, 0, 0.3);
+                        text-decoration: none;
+                    }
+                    
+                    &.twitter:hover {
+                        color: #1da1f2;
+                    }
+                    
+                    &.telegram:hover {
+                        color: #0088cc;
+                    }
+                    
+                    .social-icon {
+                        font-size: 1.2em;
+                    }
+                    
+                    .social-name {
+                        font-size: 0.9em;
+                    }
+                }
+            }
+        }
+    }
+    
+    .profile-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5em;
+        
+        @media (max-width: @mobile-width) {
+            grid-template-columns: 1fr;
+        }
+        
+        .profile-section-wallet,
+        .profile-section-registry {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75em;
+            padding: 1.5em;
+        }
+        
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 1em;
+            color: #FFE66D;
+            font-size: 1.2em;
+        }
+        
+        .wallet-address,
+        .registry-details div {
+            margin-bottom: 0.5em;
+            font-size: 0.9em;
+            overflow-wrap: anywhere;
+        }
+        
+        .wallet-balance {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
             margin-top: 1em;
-            width: 100%;
+            
+            .balance-amount {
+                font-size: 1.5em;
+                font-variation-settings: 'wght' 600;
+            }
+            
+            .balance-currency {
+                font-size: 1em;
+                opacity: 0.8;
+            }
+        }
+    }
+    
+    .profile-section-nfts {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 1.5em;
+        
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 1em;
+            color: #FFE66D;
+            font-size: 1.2em;
+        }
+        
+        .loading-assets {
+            display: flex;
+            align-items: center;
+            gap: 1em;
+            padding: 1em;
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .no-nfts {
+            padding: 1.5em;
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5em;
+            
+            .nft-item {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 0.5em;
+                overflow: hidden;
+                transition: transform 0.2s ease;
+                
+                &:hover {
+                    transform: translateY(-5px);
+                }
+                
+                .nft-image-container {
+                    width: 100%;
+                    aspect-ratio: 1;
+                    overflow: hidden;
+                    
+                    .nft-image {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                }
+                
+                .nft-details {
+                    padding: 0.75em;
+                    
+                    .nft-name {
+                        font-size: 0.9em;
+                        font-variation-settings: 'wght' 600;
+                        margin-bottom: 0.25em;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    
+                    .nft-id {
+                        font-size: 0.75em;
+                        color: #aaa;
+                        font-family: monospace;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+            }
         }
     }
 }

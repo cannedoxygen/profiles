@@ -1,60 +1,258 @@
 @import './variables.less';
 
 #page.page-search-profiles {
-    .form-field textarea {
-        margin-top: 0.5em;
-        min-height: 6em;
+    max-width: 1000px;
+    margin: 0 auto;
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 1.5em;
+        background: linear-gradient(90deg, #FF6B6B, #FFE66D);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
-    .error-message {
-        margin-top: 1em;
-        color: @color-red;
+    
+    h2 {
+        font-size: 1.3em;
+        margin: 1.5em 0 1em;
+        color: #FFE66D;
     }
+    
+    .search-container {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 1.5em;
+        margin-bottom: 2em;
+    }
+    
+    .search-tabs {
+        display: flex;
+        margin-bottom: 1.5em;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        
+        .search-tab {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            padding: 0.75em 1.5em;
+            margin-right: 1em;
+            cursor: pointer;
+            font-size: 0.9em;
+            position: relative;
+            transition: all 0.2s ease;
+            
+            &.active {
+                color: #FFE66D;
+                
+                &:after {
+                    content: '';
+                    position: absolute;
+                    bottom: -1px;
+                    left: 0;
+                    width: 100%;
+                    height: 2px;
+                    background: #FFE66D;
+                }
+            }
+            
+            &:hover:not(.active) {
+                color: #FFE66D;
+                opacity: 0.8;
+            }
+        }
+    }
+    
+    .search-form {
+        .form-field {
+            position: relative;
+            
+            input {
+                width: 100%;
+                padding: 1em;
+                background: rgba(0, 0, 0, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 0.5em;
+                color: var(--text-color);
+                font-size: 1em;
+                transition: border-color 0.2s ease;
+                
+                &:focus {
+                    border-color: #FFE66D;
+                    outline: none;
+                }
+            }
+            
+            .input-info {
+                position: absolute;
+                right: 1em;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 0.8em;
+                color: #aaa;
+            }
+        }
+    }
+    
     .search-loading {
-        margin: 1em 0;
-        padding: .45em 0;
-    }
-    .search-results {
+        text-align: center;
         margin-top: 1em;
-        th {
-            text-align: left;
-            font-variation-settings: 'wght' 600;
+        font-style: italic;
+        color: #aaa;
+    }
+    
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5em;
+        
+        @media (max-width: @mobile-width) {
+            grid-template-columns: 1fr;
         }
-        th, td {
-            padding: 0.4em 0;
+    }
+    
+    .profile-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 1em;
+        display: flex;
+        gap: 1em;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        color: var(--text-color);
+        
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            text-decoration: none;
         }
-        .td-owner {
-            padding-right: 1em;
-        }
-        .td-profile {
-            .no-profile {
+        
+        &.no-profile {
+            cursor: default;
+            opacity: 0.7;
+            
+            &:hover {
+                transform: none;
+                box-shadow: none;
+                background: rgba(255, 255, 255, 0.05);
+            }
+            
+            .profile-card-message {
                 font-style: italic;
                 color: #aaa;
+            }
+        }
+        
+        .profile-card-image {
+            flex: 0 0 70px;
+            
+            img {
+                width: 70px;
+                height: 70px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+        
+        .profile-card-content {
+            flex: 1;
+            min-width: 0; // For text overflow to work
+            
+            .profile-card-name {
+                font-size: 1.2em;
+                font-variation-settings: 'wght' 600;
+                margin-bottom: 0.5em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .profile-card-description {
                 font-size: 0.9em;
-
+                color: #ddd;
+                margin-bottom: 0.5em;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
-            .profile-name {
-                overflow-wrap: anywhere;
-                vertical-align: middle;
+            
+            .profile-card-address {
+                font-family: monospace;
+                font-size: 0.85em;
+                margin-bottom: 0.5em;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
-            @image-size: 1.2em;
-            .profile-img-wrap {
-                display: inline-block;
-                margin-right: 0.5em;
-                height: @image-size;
-                width: @image-size;
-                vertical-align: middle;
-                .profile-img {
-                    display: block;
-                    background-image: url('/img/anon.webp');
-                    background-size: cover;
-                    background-position: center;
-                    height: @image-size;
-                    width: @image-size;
-                    box-sizing: border-box;
-                    object-fit: cover;
-                    border-radius: 10%;
+            
+            .profile-card-social {
+                display: flex;
+                gap: 0.75em;
+                margin-top: 0.5em;
+                
+                .profile-social-link {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.1);
+                    transition: background 0.2s ease;
+                    
+                    &:hover {
+                        background: rgba(255, 255, 255, 0.2);
+                    }
+                    
+                    .social-icon {
+                        font-size: 0.9em;
+                    }
                 }
             }
         }
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 3em 1em;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        
+        h2 {
+            margin-top: 0;
+        }
+        
+        p {
+            margin-bottom: 1.5em;
+            color: #aaa;
+        }
+        
+        .create-profile-btn {
+            background: #FF6B6B;
+            display: inline-block;
+            
+            &:hover {
+                background: #ff8080;
+            }
+        }
+    }
+    
+    .loading-popular {
+        text-align: center;
+        padding: 2em;
+        color: #aaa;
+        font-style: italic;
+    }
+    
+    .error-message {
+        background: rgba(255, 107, 107, 0.2);
+        border-radius: 0.5em;
+        padding: 1em;
+        margin: 1em 0;
+        color: #ff6f6f;
+        font-size: 0.9em;
     }
 }

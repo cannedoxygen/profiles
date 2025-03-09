@@ -8,7 +8,7 @@ import {
 } from "@mysten/dapp-kit";
 import "@mysten/dapp-kit/dist/index.css";
 import { getFullnodeUrl } from "@mysten/sui/client";
-import { PolymediaProfile, ProfileClient } from "@polymedia/profile-sdk";
+import { TardinatorProfile, ProfileClient } from "@tardinator/profile-sdk";
 import { loadNetwork } from "@polymedia/suitcase-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -20,6 +20,7 @@ import { PageNotFound } from "./PageNotFound";
 import { PageProfileManage } from "./PageProfileManage";
 import { PageProfileSearch } from "./PageProfileSearch";
 import { PageProfileView } from "./PageProfileView";
+import { PageNFTGallery } from "./PageNFTGallery";
 import { PageRegistryNew } from "./PageRegistryNew";
 import { notifyError } from "./components/Notification";
 import "./styles/App.less";
@@ -37,6 +38,7 @@ export const AppRouter: React.FC = () => {
                 <Route path="registry/new" element={<PageRegistryNew />} />
                 <Route path="search" element={<PageProfileSearch />} />
                 <Route path="view/:profileId" element={<PageProfileView />} />
+                <Route path="nfts" element={<PageNFTGallery />} />
                 <Route path="*" element={<PageNotFound />} />
             </Route>
         </Routes>
@@ -75,9 +77,9 @@ export type ReactSetter<T> = React.Dispatch<React.SetStateAction<T>>;
 
 export type AppContext = {
     network: NetworkName;
-    profile: PolymediaProfile|null|undefined;
+    profile: TardinatorProfile|null|undefined;
     profileClient: ProfileClient;
-    reloadProfile: () => Promise<PolymediaProfile|null|undefined>;
+    reloadProfile: () => Promise<TardinatorProfile|null|undefined>;
     openConnectModal: () => void;
 };
 
@@ -91,7 +93,7 @@ const App: React.FC<{
     const suiClient = useSuiClient();
     const currentAccount = useCurrentAccount();
 
-    const [ profile, setProfile ] = useState<PolymediaProfile|null|undefined>(undefined);
+    const [ profile, setProfile ] = useState<TardinatorProfile|null|undefined>(undefined);
     const [ showConnectModal, setShowConnectModal ] = useState(false);
     const [ profileClient, setProfileManager ] = useState<ProfileClient>(
         new ProfileClient(network, suiClient)
@@ -107,13 +109,13 @@ const App: React.FC<{
         reloadProfile();
     }, [currentAccount]);
 
-    const reloadProfile = async (): Promise<PolymediaProfile|null|undefined> => {
+    const reloadProfile = async (): Promise<TardinatorProfile|null|undefined> => {
         if (!currentAccount) {
             setProfile(undefined);
             return undefined;
         }
         return await profileClient.getProfileByOwner(currentAccount.address, false)
-        .then((result: PolymediaProfile|null) => {
+        .then((result: TardinatorProfile|null) => {
             console.debug("[reloadProfile] Setting profile:", result);
             setProfile(result);
             return result;

@@ -1,136 +1,267 @@
-import { PolymediaProfile } from "@polymedia/profile-sdk";
-import { ADDRESS_REGEX } from "@polymedia/suitcase-core";
-import { LinkToPolymedia, makeCssUrl } from "@polymedia/suitcase-react";
-import { useEffect, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
-import { AppContext } from "./App";
-import "./styles/SearchProfiles.less";
+@import './variables.less';
 
-const addressRegex = new RegExp(ADDRESS_REGEX, "g");
-
-export const PageProfileSearch: React.FC = () =>
-{
-    /* State */
-
-    const {
-        network,
-        profileClient,
-    } = useOutletContext<AppContext>();
-
-    const [userInput, setUserInput] = useState<string>("");
-    const [addressCount, setAddressCount] = useState<number>(0);
-    const [results, setResults] = useState<Map<string, PolymediaProfile | null>|undefined>(undefined);
-    const [errorMsg, setErrorMsg] = useState<string|null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-
-    /* Functions */
-
-    useEffect(() => {
-        document.title = "Polymedia Profile - Search";
-    }, []);
-
-    useEffect(() => {
-        const loadProfiles = async () => {
-            setErrorMsg(null);
-            setResults(undefined);
-            const addresses = userInput.match(addressRegex) || [];
-            setAddressCount(addresses.length);
-            if (addresses.length === 0) {
-                return;
+#page.page-manage-profile {
+    max-width: 800px;
+    margin: 0 auto;
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 1.5em;
+        background: linear-gradient(90deg, #FF6B6B, #FFE66D);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .section {
+        margin-bottom: 2em;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 1.5em;
+        
+        h2 {
+            margin-top: 0;
+            margin-bottom: 1em;
+            color: #FFE66D;
+            font-size: 1.5em;
+        }
+    }
+    
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1em;
+        margin: 2em 0;
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #FFE66D;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    }
+    
+    .form {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75em;
+        padding: 2em;
+        margin-bottom: 2em;
+    }
+    
+    .form-field {
+        margin-bottom: 1.5em;
+        
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-variation-settings: 'wght' 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.8em;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5em;
+            color: var(--text-color);
+            font-size: 1em;
+            transition: border-color 0.2s ease;
+            
+            &:focus {
+                border-color: #FFE66D;
+                outline: none;
             }
-            setIsLoading(true);
-            try {
-                const profiles = await profileClient.getProfilesByOwner(addresses);
-                setResults(profiles);
-            } catch (err) {
-                console.warn("[loadProfiles]", err);
-                setErrorMsg(String(err));
-            } finally {
-                setIsLoading(false);
+            
+            &.waiting {
+                opacity: 0.7;
+                cursor: wait;
             }
-        };
-        loadProfiles();
-    }, [userInput]);
-
-    const onUserInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const addressesString = e.target.value;
-        setUserInput(addressesString);
-    };
-
-    /* HTML */
-
-    const ProfileLine: React.FC<{
-        address: string;
-        profile: PolymediaProfile | null;
-    }> = ({
-        address,
-        profile,
-    }) => {
-        const hasPfp = profile && profile.imageUrl.length > 0;
-        const pfpStyle = !hasPfp
-            ? { opacity: 0.7 }
-            : { backgroundImage: makeCssUrl(profile.imageUrl) };
-        return (
-            <tr className="profile-line">
-                <td className="td-owner">
-                    <LinkToPolymedia network={network} kind="address" addr={address} />
-                </td>
-                <td className="td-profile">
-                {
-                    !profile
-                    ? <span className="no-profile">no profile</span>
-                    : <Link to={"/view/"+profile.id}>
-                        <div className="profile-img-wrap">
-                            <span className="profile-img" style={pfpStyle} />
-                        </div>
-                        <span className="profile-name">
-                            {profile.name}
-                        </span>
-                    </Link>
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+    }
+    
+    .username-input-container {
+        display: flex;
+        align-items: center;
+        
+        .username-status {
+            margin-left: 1em;
+            font-size: 0.9em;
+            
+            .checking {
+                color: #aaa;
+            }
+            
+            .available {
+                color: #6fee6f;
+            }
+            
+            .unavailable {
+                color: #ff6f6f;
+            }
+        }
+    }
+    
+    .input-with-prefix {
+        display: flex;
+        align-items: center;
+        
+        .input-prefix {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.8em;
+            border-radius: 0.5em 0 0 0.5em;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: none;
+        }
+        
+        input {
+            border-radius: 0 0.5em 0.5em 0;
+        }
+    }
+    
+    .social-links-section {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 0.75em;
+        padding: 1.5em;
+        margin: 2em 0;
+        
+        h3 {
+            margin-top: 0;
+            color: #FFE66D;
+            margin-bottom: 1em;
+        }
+    }
+    
+    .field-optional {
+        margin-left: 0.4em;
+        color: #aaa;
+        font-size: 0.7em;
+        font-variation-settings: 'wght' 400;
+    }
+    
+    .field-error {
+        color: @color-red;
+        font-size: 0.8em;
+        margin-top: 0.5em;
+    }
+    
+    .field-info {
+        font-style: italic;
+        font-size: 0.8em;
+        margin-top: 0.5em;
+        color: #aaa;
+    }
+    
+    .character-count {
+        text-align: right;
+        font-size: 0.8em;
+        color: #aaa;
+        margin-top: 0.3em;
+    }
+    
+    button {
+        background: linear-gradient(90deg, #FF6B6B, #FFD166);
+        color: #fff;
+        font-size: 1.1em;
+        padding: 0.8em 1.5em;
+        border: none;
+        border-radius: 0.5em;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-variation-settings: 'wght' 600;
+        width: 100%;
+        margin-top: 2em;
+        
+        &:hover {
+            filter: brightness(1.1);
+        }
+        
+        &.disabled {
+            background: #555;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+        
+        &.waiting {
+            opacity: 0.7;
+            cursor: wait;
+        }
+    }
+    
+    .section-image {
+        img {
+            max-width: 100%;
+            border-radius: 1em;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+    }
+    
+    .section-info {
+        p {
+            margin-bottom: 0.5em;
+            overflow-wrap: anywhere;
+        }
+    }
+    
+    .section-nfts {
+        .loading-nfts {
+            text-align: center;
+            padding: 2em;
+            color: #aaa;
+        }
+        
+        .no-nfts {
+            text-align: center;
+            padding: 2em;
+            color: #aaa;
+            font-style: italic;
+        }
+        
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1em;
+            
+            .nft-item {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 0.5em;
+                overflow: hidden;
+                transition: transform 0.2s ease;
+                
+                &:hover {
+                    transform: translateY(-5px);
                 }
-                </td>
-            </tr>
-        );
-    };
-
-    return <div id="page" className="page-search-profiles">
-        <h1>SEARCH PROFILES</h1>
-
-        <p>
-            Enter one or more Sui addresses to fetch their profiles.
-        </p>
-
-        <form className="form">
-        <div className="form-field">
-            <textarea
-                value={userInput}
-                spellCheck="false" autoCorrect="off" autoComplete="off"
-                onChange={onUserInputChange}
-            />
-            <div>
-                {addressCount} address{addressCount !== 1 && "es"}
-            </div>
-        </div>
-            {isLoading && <div className="search-loading">Loading...</div>}
-        </form>
-
-        {results &&
-        <div className="search-results">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Owner</th>
-                        <th>Profile</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Array.from(results.entries()).map(([address, profile]) => (
-                        <ProfileLine key={address} address={address} profile={profile} />
-                    ))}
-                </tbody>
-            </table>
-        </div>}
-
-        {errorMsg && <div className="error-message">{errorMsg}</div>}
-    </div>;
-};
+                
+                img {
+                    width: 100%;
+                    aspect-ratio: 1/1;
+                    object-fit: cover;
+                }
+                
+                .nft-name {
+                    padding: 0.5em;
+                    font-size: 0.8em;
+                    text-align: center;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+        }
+    }
+    
+    .hidden {
+        display: none;
+    }
+}

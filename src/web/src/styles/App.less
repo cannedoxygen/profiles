@@ -2,6 +2,13 @@
 
 :root {
     --text-color: rgb(224, 224, 224);
+    --primary-color: #FF6B6B;
+    --secondary-color: #FFE66D;
+    --background-color: #202226;
+    --card-background: rgba(255, 255, 255, 0.05);
+    --hover-color: rgba(255, 255, 255, 0.1);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-radius: 0.75em;
 }
 
 html {
@@ -16,8 +23,12 @@ html, body, p, h1, h2, h3, h4, h5, input, button, div, textarea {
 }
 
 body {
-    background-color: #202226;
+    background-color: var(--background-color);
     color: var(--text-color);
+    background-image: 
+        radial-gradient(circle at 40% 20%, rgba(255, 107, 107, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255, 230, 109, 0.05) 0%, transparent 30%);
+    background-attachment: fixed;
 }
 
 h1, h2 {
@@ -25,13 +36,17 @@ h1, h2 {
 }
 
 h1 {
-    font-variation-settings: 'wght' 400;
-    font-size: 2em;
+    font-variation-settings: 'wght' 700;
     font-size: 2.1em;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 h2 {
-    font-variation-settings: 'wght' 350;
+    font-variation-settings: 'wght' 600;
+    color: var(--secondary-color);
 }
 
 b {
@@ -41,12 +56,14 @@ b {
 a {
     color: #79eeff;
     text-decoration: none;
+    transition: color 0.2s ease;
     &:hover {
         color: #a8faff;
         text-decoration: underline;
         cursor: pointer;
     }
 }
+
 li {
     margin-bottom: 1em;
 }
@@ -80,24 +97,43 @@ li {
 }
 
 input, textarea, button, .btn {
-    border-radius: 0.5em;
+    border-radius: var(--border-radius);
 }
 
 .form {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 2em;
+    margin-bottom: 2em;
+    
     .form-field {
         label, input {
             display: block;
         }
         label {
             margin: 0.8em 0 0.2em 0.1em;
+            font-variation-settings: 'wght' 500;
         }
         input, textarea {
-            border: 0;
-            padding: 0.5em 0.8em;
+            border: 1px solid var(--border-color);
+            padding: 0.8em;
             width: 100%;
             box-sizing: border-box;
             font-size: 0.85em;
             font-variation-settings: 'wght' 350;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            transition: border-color 0.2s ease;
+            
+            &:focus {
+                border-color: var(--secondary-color);
+                outline: none;
+            }
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
     }
 }
@@ -114,17 +150,20 @@ input, textarea, button, .btn {
 }
 
 button, .btn {
-    background-color: #007ae0;
+    background: linear-gradient(90deg, var(--primary-color), #FFD166);
     border: 0;
-    color: var(--text-color);
+    color: white;
     display: inline-block;
     font-size: 1em;
     font-variation-settings: 'wght' 700;
     margin-top: 1.4em;
-    padding: 0.45em 0.8em;
+    padding: 0.55em 1.2em;
     user-select: none;
+    transition: all 0.2s ease;
     &:hover {
-        background-color: #1c97ff;
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         color: white;
         cursor: pointer;
         text-decoration: none;
@@ -139,8 +178,43 @@ button, .btn {
 
 .error {
     overflow-wrap: anywhere;
+    color: var(--primary-color);
 }
 
 .hidden {
     display: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--secondary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+// Card styles
+.card {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 1.5em;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+}
+
+// Gradient text utility
+.gradient-text {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
