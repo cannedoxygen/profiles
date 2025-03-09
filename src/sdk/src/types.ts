@@ -3,13 +3,15 @@ import { bcs, fromHEX, toHEX } from "@mysten/bcs";
 export type NetworkName =  "mainnet" | "testnet" | "devnet" | "localnet";
 
 /**
- * Represents a `polymedia_profile::profile::Profile` Sui object
+ * Represents a `tardinator::profile::Profile` Sui object
  */
-export type PolymediaProfile = {
+export type TardinatorProfile = {
     id: string;
     name: string;
     imageUrl: string;
     description: string;
+    xHandle: string;
+    telegramHandle: string;
     data: unknown;
     owner: string;
 };

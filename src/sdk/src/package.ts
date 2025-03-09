@@ -43,6 +43,8 @@ export function create_profile(
     name: string,
     imageUrl?: string,
     description?: string,
+    xHandle?: string,
+    telegramHandle?: string,
     data?: unknown,
 ): TransactionResult
 {
@@ -52,6 +54,8 @@ export function create_profile(
         tx.pure.string(name),
         tx.pure.string(imageUrl ?? ""),
         tx.pure.string(description ?? ""),
+        tx.pure.string(xHandle ?? ""),
+        tx.pure.string(telegramHandle ?? ""),
         tx.pure.string(dataJson),
     ];
     return tx.moveCall({
@@ -61,27 +65,46 @@ export function create_profile(
     });
 }
 
-export function edit_profile(
+export function update_profile(
     tx: Transaction,
     profileId: string,
     packageId: string,
-    name: string,
     imageUrl?: string,
     description?: string,
+    xHandle?: string,
+    telegramHandle?: string,
     data?: unknown,
 ): TransactionResult
 {
     const dataJson = data ? JSON.stringify(data) : "";
     const moveArgs = [
         tx.object(profileId),
-        tx.pure.string(name),
         tx.pure.string(imageUrl ?? ""),
         tx.pure.string(description ?? ""),
+        tx.pure.string(xHandle ?? ""),
+        tx.pure.string(telegramHandle ?? ""),
         tx.pure.string(dataJson),
     ];
     return tx.moveCall({
-        target: `${packageId}::profile::edit_profile`,
+        target: `${packageId}::profile::update_profile`,
         typeArguments: [],
         arguments: moveArgs,
+    });
+}
+
+export function is_name_available(
+    tx: Transaction,
+    packageId: string,
+    registryId: string,
+    name: string,
+): TransactionResult
+{
+    return tx.moveCall({
+        target: `${packageId}::profile::is_name_available`,
+        typeArguments: [],
+        arguments: [
+            tx.object(registryId),
+            tx.pure.string(name),
+        ],
     });
 }
