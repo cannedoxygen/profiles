@@ -1,63 +1,248 @@
 @import '../styles/variables.less';
 
+// Tardinator theme colors
 :root {
-    --bottom: 20px;
+  --tardinator-primary: #6366f1;   // Indigo
+  --tardinator-success: #10b981;   // Emerald
+  --tardinator-error: #ef4444;     // Red
+  --tardinator-warning: #f59e0b;   // Amber
+  --tardinator-info: #3b82f6;      // Blue
+  --tardinator-background: #ffffff;
+  --tardinator-text: #374151;
+  --tardinator-text-light: #9ca3af;
+  --notification-z-index: 9999;
 }
 
-// A toast/snackback notification in the bottom and center of the screen
+// Container for all notifications
+.notification-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  max-width: 420px;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: var(--notification-z-index);
+
+  @media (max-width: @mobile-width) {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+    width: auto;
+  }
+}
+
+// Base notification style
 .notification {
-    visibility: hidden;
-    background-color: #333;
-    border-radius: 0.5em;
-    bottom: var(--bottom);
-    box-sizing: border-box;
-    color: #fff;
-    max-height: 30%;
-    overflow-y: scroll;
-    overflow-wrap: anywhere;
-    position: fixed;
-    text-align: center;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1;
-
-    @media (min-width: @mobile-width) {
-        min-width: 500px;
-        max-width: 800px;
+  background-color: var(--tardinator-background);
+  color: var(--tardinator-text);
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms;
+  border-left: 4px solid var(--tardinator-primary);
+  
+  // Animation states
+  &.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  &.hide {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  
+  // Success variant
+  &.notification-success {
+    border-left-color: var(--tardinator-success);
+    
+    .notification-icon {
+      color: var(--tardinator-success);
     }
-    @media (max-width: 799px) {
-        width: 86%;
+  }
+  
+  // Error variant
+  &.notification-error {
+    border-left-color: var(--tardinator-error);
+    
+    .notification-icon {
+      color: var(--tardinator-error);
     }
+  }
+  
+  // Warning variant
+  &.notification-warning {
+    border-left-color: var(--tardinator-warning);
+    
+    .notification-icon {
+      color: var(--tardinator-warning);
+    }
+  }
+  
+  // Info variant
+  &.notification-info {
+    border-left-color: var(--tardinator-info);
+    
+    .notification-icon {
+      color: var(--tardinator-info);
+    }
+  }
 }
 
-.notification.show {
-    visibility: visible;
-    // 0.5 seconds to fade in
-    // 2.5 seconds of pause
-    // 0.5 seconds to fade out
-    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+// Content container (icon + message)
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  margin-right: 16px;
 }
 
-.notification.okay {
-    background-color: #008e0b;
-    background-color: rgba(0, 142, 11, 0.9);
-    font-variation-settings: 'wght' 700;
-    font-size: 1.2em;
-    padding: 1rem;
+// Icon styling
+.notification-icon {
+  flex-shrink: 0;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
-.notification.error {
-    background-color: rgba(139, 0, 0, 0.9);
-    font-size: 0.9em;
-    padding: 16px;
+// Message text
+.notification-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word;
+  font-variation-settings: 'wght' 400;
 }
 
-@keyframes fadein {
-    from {bottom: 0; opacity: 0;}
-    to {bottom: var(--bottom); opacity: 1;}
+// Actions container (buttons)
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-@keyframes fadeout {
-    from {bottom: var(--bottom); opacity: 1;}
-    to {bottom: 0; opacity: 0;}
+// Action button
+.notification-action {
+  background-color: transparent;
+  color: var(--tardinator-primary);
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  font-variation-settings: 'wght' 500;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  }
+}
+
+// Dismiss button
+.notification-dismiss {
+  background-color: transparent;
+  border: none;
+  color: var(--tardinator-text-light);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+  padding: 0;
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  &:hover {
+    color: var(--tardinator-text);
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.25);
+  }
+}
+
+// Progress bar for auto-dismiss
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background-color: currentColor;
+  opacity: 0.2;
+  width: 100%;
+  animation: notification-progress linear forwards;
+}
+
+@keyframes notification-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .notification {
+    --tardinator-background: #1f2937;
+    --tardinator-text: #e5e7eb;
+    --tardinator-text-light: #6b7280;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .notification-action:hover {
+    background-color: rgba(99, 102, 241, 0.2);
+  }
+  
+  .notification-dismiss:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 480px) {
+  .notification-container {
+    right: 8px;
+    left: 8px;
+    bottom: 8px;
+    max-width: none;
+  }
+  
+  .notification {
+    padding: 12px;
+  }
 }

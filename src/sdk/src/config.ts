@@ -1,28 +1,27 @@
-import { NetworkName } from "./types.js";
+import { NetworkName } from "./types";
 
 export type NetworkConfig = {
     packageId: string;
     registryId: string;
 };
 
-export const TARDINATOR_IDS: Record<NetworkName, NetworkConfig> = {
+// These are placeholder IDs - you'll need to replace these with your own
+// package and registry IDs after deploying your Tardinator contracts
+export const PROFILE_IDS: Record<NetworkName, NetworkConfig> = {
     mainnet: {
-        // These would be the mainnet addresses after you deploy your contract
-        packageId: "0x0000000000000000000000000000000000000000000000000000000000000000",
-        registryId: "0x0000000000000000000000000000000000000000000000000000000000000000",
+        packageId: "", // Will be populated after deployment
+        registryId: "", // Will be populated after deployment
     },
     testnet: {
-        // These would be the testnet addresses after you deploy your contract
-        packageId: "0x0000000000000000000000000000000000000000000000000000000000000000",
-        registryId: "0x0000000000000000000000000000000000000000000000000000000000000000",
+        packageId: "", // Will be populated after deployment
+        registryId: "", // Will be populated after deployment
     },
     devnet: {
-        // These would be the devnet addresses after you deploy your contract
-        packageId: "0x0000000000000000000000000000000000000000000000000000000000000000",
-        registryId: "0x0000000000000000000000000000000000000000000000000000000000000000",
+        packageId: "", // Will be populated after deployment
+        registryId: "", // Will be populated after deployment
     },
     localnet: {
-        packageId: "",
-        registryId: "",
+        packageId: "", // Will be populated after deployment
+        registryId: "", // Will be populated after deployment
     },
 };

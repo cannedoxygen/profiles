@@ -1,267 +1,307 @@
-@import './variables.less';
+import { TardinatorProfile } from "@tardinator/profile-sdk";
+import { ADDRESS_REGEX } from "@polymedia/suitcase-core";
+import { LinkToTardinator } from "@tardinator/suitcase-react";
+import { useEffect, useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
+import { AppContext } from "./App";
+import "./styles/SearchProfiles.less";
 
-#page.page-manage-profile {
-    max-width: 800px;
-    margin: 0 auto;
-    
-    h1 {
-        text-align: center;
-        margin-bottom: 1.5em;
-        background: linear-gradient(90deg, #FF6B6B, #FFE66D);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .section {
-        margin-bottom: 2em;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 0.75em;
-        padding: 1.5em;
+const addressRegex = new RegExp(ADDRESS_REGEX, "g");
+
+export const PageProfileSearch: React.FC = () =>
+{
+    /* State */
+
+    const {
+        network,
+        profileClient,
+    } = useOutletContext<AppContext>();
+
+    const [searchType, setSearchType] = useState<'address' | 'username'>('username');
+    const [userInput, setUserInput] = useState<string>("");
+    const [addressCount, setAddressCount] = useState<number>(0);
+    const [results, setResults] = useState<Map<string, TardinatorProfile | null>|undefined>(undefined);
+    const [errorMsg, setErrorMsg] = useState<string|null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [popularProfiles, setPopularProfiles] = useState<TardinatorProfile[]>([]);
+    const [isLoadingPopular, setIsLoadingPopular] = useState<boolean>(true);
+
+    /* Functions */
+
+    useEffect(() => {
+        document.title = "Tardinator Profile - Search";
+        loadPopularProfiles();
+    }, []);
+
+    const loadPopularProfiles = async () => {
+        setIsLoadingPopular(true);
         
-        h2 {
-            margin-top: 0;
-            margin-bottom: 1em;
-            color: #FFE66D;
-            font-size: 1.5em;
+        try {
+            // This would be replaced with actual API call to get popular profiles
+            // Simulating with mock data for now
+            setTimeout(() => {
+                setPopularProfiles([
+                    {
+                        id: "0xabc123",
+                        name: "tardinator",
+                        imageUrl: "https://placehold.co/200x200/FFE66D/000000?text=T",
+                        description: "The original Tardinator",
+                        owner: "0x1234567890abcdef",
+                        xTwitter: "tardinator",
+                        telegram: "tardinator_official"
+                    },
+                    {
+                        id: "0xdef456",
+                        name: "suifan",
+                        imageUrl: "https://placehold.co/200x200/FF6B6B/000000?text=S",
+                        description: "Sui ecosystem supporter",
+                        owner: "0xabcdef1234567890",
+                        xTwitter: "suifan",
+                        telegram: "suifan_22"
+                    },
+                    {
+                        id: "0xghi789",
+                        name: "cryptolover",
+                        imageUrl: "https://placehold.co/200x200/68D391/000000?text=C",
+                        description: "Crypto enthusiast and NFT collector",
+                        owner: "0x7890abcdef123456",
+                        xTwitter: "crypto_lover",
+                        telegram: "crypto_lover"
+                    }
+                ]);
+                setIsLoadingPopular(false);
+            }, 1000);
+        } catch (err) {
+            console.warn("[loadPopularProfiles]", err);
+            setIsLoadingPopular(false);
         }
-    }
-    
-    .loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1em;
-        margin: 2em 0;
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top-color: #FFE66D;
-            animation: spin 1s ease-in-out infinite;
+    };
+
+    useEffect(() => {
+        if (searchType === 'address') {
+            searchByAddress();
+        } else {
+            searchByUsername();
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+    }, [userInput, searchType]);
+
+    const searchByAddress = async () => {
+        setErrorMsg(null);
+        setResults(undefined);
+        const addresses = userInput.match(addressRegex) || [];
+        setAddressCount(addresses.length);
+        if (addresses.length === 0) {
+            return;
         }
-    }
-    
-    .form {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 0.75em;
-        padding: 2em;
-        margin-bottom: 2em;
-    }
-    
-    .form-field {
-        margin-bottom: 1.5em;
-        
-        label {
-            display: block;
-            margin-bottom: 0.5em;
-            font-variation-settings: 'wght' 500;
+        setIsLoading(true);
+        try {
+            const profiles = await profileClient.getProfilesByOwner(addresses);
+            setResults(profiles);
+        } catch (err) {
+            console.warn("[searchByAddress]", err);
+            setErrorMsg(String(err));
+        } finally {
+            setIsLoading(false);
         }
-        
-        input, textarea {
-            width: 100%;
-            padding: 0.8em;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.5em;
-            color: var(--text-color);
-            font-size: 1em;
-            transition: border-color 0.2s ease;
-            
-            &:focus {
-                border-color: #FFE66D;
-                outline: none;
-            }
-            
-            &.waiting {
-                opacity: 0.7;
-                cursor: wait;
-            }
-        }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-    }
-    
-    .username-input-container {
-        display: flex;
-        align-items: center;
-        
-        .username-status {
-            margin-left: 1em;
-            font-size: 0.9em;
-            
-            .checking {
-                color: #aaa;
-            }
-            
-            .available {
-                color: #6fee6f;
-            }
-            
-            .unavailable {
-                color: #ff6f6f;
-            }
-        }
-    }
-    
-    .input-with-prefix {
-        display: flex;
-        align-items: center;
-        
-        .input-prefix {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.8em;
-            border-radius: 0.5em 0 0 0.5em;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-right: none;
+    };
+
+    const searchByUsername = async () => {
+        if (!userInput || userInput.length < 3) {
+            setResults(undefined);
+            return;
         }
         
-        input {
-            border-radius: 0 0.5em 0.5em 0;
-        }
-    }
-    
-    .social-links-section {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 0.75em;
-        padding: 1.5em;
-        margin: 2em 0;
+        setErrorMsg(null);
+        setIsLoading(true);
         
-        h3 {
-            margin-top: 0;
-            color: #FFE66D;
-            margin-bottom: 1em;
-        }
-    }
-    
-    .field-optional {
-        margin-left: 0.4em;
-        color: #aaa;
-        font-size: 0.7em;
-        font-variation-settings: 'wght' 400;
-    }
-    
-    .field-error {
-        color: @color-red;
-        font-size: 0.8em;
-        margin-top: 0.5em;
-    }
-    
-    .field-info {
-        font-style: italic;
-        font-size: 0.8em;
-        margin-top: 0.5em;
-        color: #aaa;
-    }
-    
-    .character-count {
-        text-align: right;
-        font-size: 0.8em;
-        color: #aaa;
-        margin-top: 0.3em;
-    }
-    
-    button {
-        background: linear-gradient(90deg, #FF6B6B, #FFD166);
-        color: #fff;
-        font-size: 1.1em;
-        padding: 0.8em 1.5em;
-        border: none;
-        border-radius: 0.5em;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-variation-settings: 'wght' 600;
-        width: 100%;
-        margin-top: 2em;
-        
-        &:hover {
-            filter: brightness(1.1);
-        }
-        
-        &.disabled {
-            background: #555;
-            color: #aaa;
-            cursor: not-allowed;
-        }
-        
-        &.waiting {
-            opacity: 0.7;
-            cursor: wait;
-        }
-    }
-    
-    .section-image {
-        img {
-            max-width: 100%;
-            border-radius: 1em;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-    }
-    
-    .section-info {
-        p {
-            margin-bottom: 0.5em;
-            overflow-wrap: anywhere;
-        }
-    }
-    
-    .section-nfts {
-        .loading-nfts {
-            text-align: center;
-            padding: 2em;
-            color: #aaa;
-        }
-        
-        .no-nfts {
-            text-align: center;
-            padding: 2em;
-            color: #aaa;
-            font-style: italic;
-        }
-        
-        .nft-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 1em;
-            
-            .nft-item {
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 0.5em;
-                overflow: hidden;
-                transition: transform 0.2s ease;
+        try {
+            // This would be replaced with actual username search API
+            // Simulating for now
+            setTimeout(() => {
+                // Create dummy results that match the username search
+                const searchResults = new Map<string, TardinatorProfile | null>();
                 
-                &:hover {
-                    transform: translateY(-5px);
+                if (userInput.toLowerCase().includes('tard')) {
+                    searchResults.set("0x1111", {
+                        id: "0x1111",
+                        name: "tardinator_official",
+                        imageUrl: "https://placehold.co/200x200/FFE66D/000000?text=T",
+                        description: "Official Tardinator account",
+                        owner: "0x1111222233334444",
+                        xTwitter: "tardinator_app",
+                        telegram: "tardinator_app"
+                    });
                 }
                 
-                img {
-                    width: 100%;
-                    aspect-ratio: 1/1;
-                    object-fit: cover;
+                if (userInput.toLowerCase().includes('crypto')) {
+                    searchResults.set("0x2222", {
+                        id: "0x2222",
+                        name: "cryptomaster",
+                        imageUrl: "https://placehold.co/200x200/FF6B6B/000000?text=C",
+                        description: "Crypto enthusiast",
+                        owner: "0x2222333344445555",
+                        xTwitter: "crypto_master",
+                        telegram: null
+                    });
                 }
                 
-                .nft-name {
-                    padding: 0.5em;
-                    font-size: 0.8em;
-                    text-align: center;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            }
+                setResults(searchResults);
+                setIsLoading(false);
+            }, 800);
+        } catch (err) {
+            console.warn("[searchByUsername]", err);
+            setErrorMsg(String(err));
+            setIsLoading(false);
         }
-    }
-    
-    .hidden {
-        display: none;
-    }
-}
+    };
+
+    const onUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setUserInput(e.target.value);
+    };
+
+    const toggleSearchType = () => {
+        setSearchType(searchType === 'address' ? 'username' : 'address');
+        setUserInput('');
+        setResults(undefined);
+    };
+
+    /* HTML */
+
+    const ProfileCard: React.FC<{
+        profile: TardinatorProfile | null;
+        address?: string;
+    }> = ({
+        profile,
+        address,
+    }) => {
+        if (!profile) {
+            return (
+                <div className="profile-card no-profile">
+                    <div className="profile-card-content">
+                        <div className="profile-card-address">
+                            <LinkToTardinator network={network} kind="address" addr={address || ""} />
+                        </div>
+                        <div className="profile-card-message">No profile found</div>
+                    </div>
+                </div>
+            );
+        }
+        
+        return (
+            <Link to={`/view/${profile.id}`} className="profile-card">
+                <div className="profile-card-image">
+                    <img src={profile.imageUrl || "/img/anon.webp"} alt={profile.name} />
+                </div>
+                <div className="profile-card-content">
+                    <div className="profile-card-name">{profile.name}</div>
+                    {profile.description && (
+                        <div className="profile-card-description">{profile.description}</div>
+                    )}
+                    <div className="profile-card-social">
+                        {profile.xTwitter && (
+                            <a 
+                                href={`https://x.com/${profile.xTwitter}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="profile-social-link"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <span className="social-icon">𝕏</span>
+                            </a>
+                        )}
+                        {profile.telegram && (
+                            <a 
+                                href={`https://t.me/${profile.telegram}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="profile-social-link"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <span className="social-icon">✈️</span>
+                            </a>
+                        )}
+                    </div>
+                </div>
+            </Link>
+        );
+    };
+
+    return <div id="page" className="page-search-profiles">
+        <h1>FIND TARDINATORS</h1>
+
+        <div className="search-container">
+            <div className="search-tabs">
+                <button 
+                    className={`search-tab ${searchType === 'username' ? 'active' : ''}`}
+                    onClick={() => setSearchType('username')}
+                >
+                    Search by Username
+                </button>
+                <button 
+                    className={`search-tab ${searchType === 'address' ? 'active' : ''}`}
+                    onClick={() => setSearchType('address')}
+                >
+                    Search by Address
+                </button>
+            </div>
+
+            <div className="search-form">
+                <div className="form-field">
+                    <input
+                        value={userInput}
+                        type="text"
+                        spellCheck="false" 
+                        autoCorrect="off" 
+                        autoComplete="off"
+                        onChange={onUserInputChange}
+                        placeholder={searchType === 'address' ? 
+                            "Enter Sui addresses" : 
+                            "Search by username (min 3 characters)"}
+                    />
+                    {searchType === 'address' && addressCount > 0 && (
+                        <div className="input-info">
+                            {addressCount} address{addressCount !== 1 && "es"}
+                        </div>
+                    )}
+                </div>
+                {isLoading && <div className="search-loading">Searching Tardinator profiles...</div>}
+            </div>
+        </div>
+
+        {results && results.size > 0 && (
+            <div className="search-results">
+                <h2>SEARCH RESULTS</h2>
+                <div className="profile-grid">
+                    {Array.from(results.entries()).map(([addressOrId, profile]) => (
+                        <ProfileCard key={addressOrId} profile={profile} address={addressOrId} />
+                    ))}
+                </div>
+            </div>
+        )}
+        
+        {results && results.size === 0 && (
+            <div className="no-results">
+                <h2>No profiles found</h2>
+                <p>Try a different search term or create your own Tardinator profile!</p>
+                <Link to="/manage" className="btn create-profile-btn">Create Profile</Link>
+            </div>
+        )}
+
+        {errorMsg && <div className="error-message">{errorMsg}</div>}
+
+        {(!results || results.size === 0) && !isLoading && !errorMsg && (
+            <div className="popular-profiles">
+                <h2>POPULAR TARDINATORS</h2>
+                {isLoadingPopular ? (
+                    <div className="loading-popular">Loading popular profiles...</div>
+                ) : (
+                    <div className="profile-grid">
+                        {popularProfiles.map(profile => (
+                            <ProfileCard key={profile.id} profile={profile} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        )}
+    </div>;
+};

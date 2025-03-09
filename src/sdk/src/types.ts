@@ -3,17 +3,18 @@ import { bcs, fromHEX, toHEX } from "@mysten/bcs";
 export type NetworkName =  "mainnet" | "testnet" | "devnet" | "localnet";
 
 /**
- * Represents a `tardinator::profile::Profile` Sui object
+ * Represents a `tardinator_profile::profile::TardinatorProfile` Sui object
  */
 export type TardinatorProfile = {
     id: string;
     name: string;
     imageUrl: string;
     description: string;
-    xHandle: string;
-    telegramHandle: string;
     data: unknown;
+    xAccount: string | null;
+    telegram: string | null;
     owner: string;
+    createdAt: number | null;
 };
 
 const BcsAddressType = bcs.bytes(32).transform({

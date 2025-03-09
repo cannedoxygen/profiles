@@ -1,20 +1,20 @@
 import { SuiClient, SuiExecutionResult, SuiObjectResponse } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { PROFILE_IDS } from "./config.js";
-import { chunkArray, devInspectAndGetResults } from "./functions.js";
-import { get_profiles } from "./package.js";
-import { BcsLookupResults, LookupResults, PolymediaProfile } from "./types.js";
+import { PROFILE_IDS } from "./config";
+import { chunkArray, devInspectAndGetResults } from "./functions";
+import { get_profiles } from "./package";
+import { BcsLookupResults, LookupResults, TardinatorProfile } from "./types";
 
 type NetworkName = "localnet" | "devnet" | "testnet" | "mainnet";
 
 /**
- * Helps fetching Polymedia Profile data from the network.
+ * Helps fetching Tardinator Profile data from the network.
  * Keeps an internal cache to avoid wasteful RPC requests.
  */
 export class ProfileClient
 {
-    protected readonly cachedAddresses = new Map<string, PolymediaProfile|null>();
-    protected readonly cachedObjects = new Map<string, PolymediaProfile|null>();
+    protected readonly cachedAddresses = new Map<string, TardinatorProfile|null>();
+    protected readonly cachedObjects = new Map<string, TardinatorProfile|null>();
     public readonly network: NetworkName;
     public readonly suiClient: SuiClient;
     public readonly packageId: string;
@@ -38,7 +38,7 @@ export class ProfileClient
     public async getProfileByOwner(
         lookupAddress: string,
         useCache?: boolean,
-    ): Promise<PolymediaProfile|null>
+    ): Promise<TardinatorProfile|null>
     {
         const lookupAddresses = [lookupAddress];
         const profiles = await this.getProfilesByOwner(lookupAddresses, useCache);
@@ -51,9 +51,9 @@ export class ProfileClient
     public async getProfilesByOwner(
         lookupAddresses: Iterable<string>,
         useCache?: boolean,
-    ): Promise<Map<string, PolymediaProfile|null>>
+    ): Promise<Map<string, TardinatorProfile|null>>
     {
-        let result = new Map<string, PolymediaProfile|null>();
+        let result = new Map<string, TardinatorProfile|null>();
         const newLookupAddresses = new Set<string>(); // unseen addresses (i.e. not cached)
 
         // Check if addresses are already in cache and add them to the returned map
@@ -93,7 +93,7 @@ export class ProfileClient
             }
 
             // Sort the results in the same order as `lookupAddresses`
-            const sortedResult = new Map<string, PolymediaProfile|null>();
+            const sortedResult = new Map<string, TardinatorProfile|null>();
             for (const addr of lookupAddresses) {
                 sortedResult.set(addr, result.get(addr) || null);
             }
@@ -109,7 +109,7 @@ export class ProfileClient
     public async getProfileById(
         objectId: string,
         useCache?: boolean,
-    ): Promise<PolymediaProfile|null>
+    ): Promise<TardinatorProfile|null>
     {
         const profiles = await this.getProfilesById([ objectId ], useCache);
         return profiles.get(objectId) || null;
@@ -121,9 +121,9 @@ export class ProfileClient
     public async getProfilesById(
         lookupObjectIds: string[],
         useCache?: boolean,
-    ): Promise<Map<string, PolymediaProfile|null>>
+    ): Promise<Map<string, TardinatorProfile|null>>
     {
-        let result = new Map<string, PolymediaProfile|null>();
+        let result = new Map<string, TardinatorProfile|null>();
         const newLookupObjectIds = new Set<string>(); // unseen objects (i.e. not cached)
 
         // Check if objects are already in cache and add them to the returned map
@@ -153,7 +153,7 @@ export class ProfileClient
 
             // Sort results in the same order as `lookupObjectIds`.
             // Add results to cache (as `null` for object IDs without associated profile objects).
-            const sortedResult = new Map<string, PolymediaProfile|null>();
+            const sortedResult = new Map<string, TardinatorProfile|null>();
             for (const objectId of lookupObjectIds) {
                 const profile = result.get(objectId) || null;
                 sortedResult.set(objectId, profile);
@@ -213,15 +213,15 @@ export class ProfileClient
         return results;
     }
     /**
-     * Fetch one or more Sui objects and return them as PolymediaProfile instances
+     * Fetch one or more Sui objects and return them as TardinatorProfile instances
      * Object IDs that don't exist or are not a Profile won't be included in the returned array.
      */
     protected async fetchProfileObjects(
         suiClient: SuiClient,
         lookupObjectIds: string[],
-    ): Promise<PolymediaProfile[]>
+    ): Promise<TardinatorProfile[]>
     {
-        const allProfiles = new Array<PolymediaProfile>();
+        const allProfiles = new Array<TardinatorProfile>();
         const objectIdBatches = chunkArray(lookupObjectIds, 50);
         const promises = objectIdBatches.map(async lookupObjectIds =>
         {
@@ -233,7 +233,7 @@ export class ProfileClient
                 },
             });
 
-            const profiles: PolymediaProfile[] = [];
+            const profiles: TardinatorProfile[] = [];
             for (const resp of resps) {
                 const profile = suiObjectToProfile(resp);
                 if (profile) {
@@ -248,7 +248,7 @@ export class ProfileClient
 }
 
 /**
- * Convert a generic `SuiObjectResponse` into a `PolymediaProfile`.
+ * Convert a generic `SuiObjectResponse` into a `TardinatorProfile`.
  *
  * Note: when fetching `SuiObjectResponse`, call SuiClient.getObject/multiGetObjects with:
     options: {
@@ -258,7 +258,7 @@ export class ProfileClient
 */
 function suiObjectToProfile(
     resp: SuiObjectResponse,
-): PolymediaProfile|null
+): TardinatorProfile|null
 {
     if (resp.error || !resp.data) {
         return null;
@@ -271,8 +271,8 @@ function suiObjectToProfile(
     if (content.dataType !== "moveObject") {
         throw new Error(`Wrong object dataType. Expected 'moveObject' but got: '${content.dataType}'`);
     }
-    if (!content.type.endsWith("::profile::Profile")) {
-        throw new Error("Wrong object type. Expected a Profile but got: " + content.type);
+    if (!content.type.endsWith("::profile::TardinatorProfile")) {
+        throw new Error("Wrong object type. Expected a TardinatorProfile but got: " + content.type);
     }
 
     const owner = resp.data.owner;
@@ -292,7 +292,10 @@ function suiObjectToProfile(
         imageUrl: fields.image_url,
         description: fields.description,
         data: fields.data ? JSON.parse(fields.data) : null,
+        xAccount: fields.x_account || null,
+        telegram: fields.telegram || null,
         owner: ("AddressOwner" in owner) ? owner.AddressOwner : owner.ObjectOwner,
+        createdAt: fields.created_at || null
     };
     /* eslint-enable */
 }
