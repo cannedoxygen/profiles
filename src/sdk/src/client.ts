@@ -1,5 +1,5 @@
-import { SuiClient, SuiExecutionResult, SuiObjectResponse } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import { SuiClient, SuiExecutionResult, SuiObjectResponse } from "@mysten/sui.js/client";
+import { TransactionBlock as Transaction } from "@mysten/sui.js/transactions";
 import { PROFILE_IDS } from "./config.js";
 import { chunkArray, devInspectAndGetResults } from "./functions.js";
 import { get_profiles } from "./package.js";
@@ -30,24 +30,6 @@ export class ProfileClient
         this.suiClient = suiClient;
         this.packageId = packageId || PROFILE_IDS[network].packageId;
         this.registryId = registryId || PROFILE_IDS[network].registryId;
-    }
-
-    /**
-     * Check if a username is available (not already taken)
-     */
-    public async isUsernameAvailable(
-        _username: string,  // Added underscore to mark as intentionally unused
-    ): Promise<boolean> {
-        // Implement username availability check
-        // This would call a new function in the Move contract
-        // Example: 
-        // const tx = new Transaction();
-        // check_username_availability(tx, this.packageId, username);
-        // const blockResults = await devInspectAndGetResults(this.suiClient, tx);
-        // return blockResults[0].returnValues![0][0] === 1;
-        
-        // For now, return true as a placeholder
-        return true;
     }
 
     /**
@@ -311,9 +293,6 @@ function suiObjectToProfile(
         description: fields.description,
         data: fields.data ? JSON.parse(fields.data) : null,
         owner: ("AddressOwner" in owner) ? owner.AddressOwner : owner.ObjectOwner,
-        xAccount: fields.x_account || undefined,
-        telegramUsername: fields.telegram || undefined,
-        createdAt: fields.created_at || Date.now(),
     };
     /* eslint-enable */
 }

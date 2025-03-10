@@ -3,12 +3,12 @@
     "version": "0.0.0",
     "name": "@tardinator/profile-web",
     "author": "Tardinator Team",
-    "homepage": "https://profile.tardinator.app",
+    "homepage": "https://www.tardi.org",
     "description": "Tardinator Profile web app to create and manage on-chain Sui profiles.",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/tardinator/tardinator-profile"
+        "url": "https://github.com/cannedoxygen/profiles"
     },
     "keywords": [],
     "scripts": {
