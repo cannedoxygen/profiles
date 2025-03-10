@@ -41,17 +41,21 @@ export function create_profile(
     packageId: string,
     registryId: string,
     name: string,
-    imageUrl?: string,
-    description?: string,
-    data?: unknown,
+    imageUrl: string = "",
+    description: string = "",
+    xAccount: string = "",
+    telegram: string = "",
+    data: unknown = null,
 ): TransactionResult
 {
     const dataJson = data ? JSON.stringify(data) : "";
     const moveArgs = [
         tx.object(registryId),
         tx.pure.string(name),
-        tx.pure.string(imageUrl ?? ""),
-        tx.pure.string(description ?? ""),
+        tx.pure.string(imageUrl),
+        tx.pure.string(description),
+        tx.pure.string(xAccount),
+        tx.pure.string(telegram),
         tx.pure.string(dataJson),
     ];
     return tx.moveCall({
@@ -65,23 +69,43 @@ export function edit_profile(
     tx: Transaction,
     profileId: string,
     packageId: string,
-    name: string,
-    imageUrl?: string,
-    description?: string,
-    data?: unknown,
+    imageUrl: string = "",
+    description: string = "",
+    xAccount: string = "",
+    telegram: string = "",
+    data: unknown = null,
 ): TransactionResult
 {
     const dataJson = data ? JSON.stringify(data) : "";
     const moveArgs = [
         tx.object(profileId),
-        tx.pure.string(name),
-        tx.pure.string(imageUrl ?? ""),
-        tx.pure.string(description ?? ""),
+        tx.pure.string(imageUrl),
+        tx.pure.string(description),
+        tx.pure.string(xAccount),
+        tx.pure.string(telegram),
         tx.pure.string(dataJson),
     ];
     return tx.moveCall({
         target: `${packageId}::profile::edit_profile`,
         typeArguments: [],
         arguments: moveArgs,
+    });
+}
+
+// Helper function to check if a username is available
+export function is_username_available(
+    tx: Transaction,
+    packageId: string,
+    registryId: string,
+    name: string
+): TransactionResult
+{
+    return tx.moveCall({
+        target: `${packageId}::profile::is_username_available`,
+        typeArguments: [],
+        arguments: [
+            tx.object(registryId),
+            tx.pure.string(name),
+        ],
     });
 }

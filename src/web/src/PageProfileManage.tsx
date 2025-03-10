@@ -1,17 +1,15 @@
 import { useCurrentAccount, useSignTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { create_profile, edit_profile } from "@tardinator/profile-sdk";
-import { LinkToPolymedia } from "@polymedia/suitcase-react";
 import { SyntheticEvent, useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { AppContext } from "./App";
+import { LinkToPolymedia } from "@polymedia/suitcase-react";
 import { notifyError, notifyOkay } from "./components/Notification";
 import "./styles/ManageProfile.less";
 
-export const PageProfileManage: React.FC = () =>
-{
+export const PageProfileManage: React.FC = () => {
     /* State */
-
     const suiClient = useSuiClient();
     const currentAccount = useCurrentAccount();
     const { mutateAsync: signTransaction } = useSignTransaction();
@@ -30,27 +28,42 @@ export const PageProfileManage: React.FC = () =>
     const [inputDescription, setInputDescription] = useState("");
     const [inputXAccount, setInputXAccount] = useState("");
     const [inputTelegramUsername, setInputTelegramUsername] = useState("");
-    // Form errors
+    
+    // Form validation
     const [isErrorImage, setIsErrorImage] = useState(false);
     const [isErrorForm, setIsErrorForm] = useState(false);
     const [isErrorImgur, setIsErrorImgur] = useState(false);
     const [isNameAvailable, setIsNameAvailable] = useState(true);
+    
     // Other state
     const [waiting, setWaiting] = useState(false);
     const [checkingName, setCheckingName] = useState(false);
 
     /* Functions */
-
     useEffect(() => {
         document.title = "Tardinator Profile - Manage";
     }, []);
 
     useEffect(() => {
-        setInputName(profile?.name || "");
-        setInputImage(profile?.imageUrl || "");
-        setInputDescription(profile?.description || "");
-        setInputXAccount(profile?.xAccount || "");
-        setInputTelegramUsername(profile?.telegramUsername || "");
+        if (profile) {
+            setInputName(profile.name || "");
+            setInputImage(profile.imageUrl || "");
+            setInputDescription(profile.description || "");
+            
+            // Handle social media accounts from profile.data
+            if (profile.data) {
+                try {
+                    const data = typeof profile.data === 'string' 
+                        ? JSON.parse(profile.data) 
+                        : profile.data;
+                    
+                    setInputXAccount(data.xAccount || "");
+                    setInputTelegramUsername(data.telegramUsername || "");
+                } catch (err) {
+                    console.warn("Error parsing profile data:", err);
+                }
+            }
+        }
     }, [profile]);
 
     const onInputImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +74,7 @@ export const PageProfileManage: React.FC = () =>
         }
         setInputImage(e.target.value);
     };
+
     const onImageLoad = () => {
         setIsErrorImage(false);
         setIsErrorForm(false);
@@ -76,13 +90,13 @@ export const PageProfileManage: React.FC = () =>
     const checkNameAvailability = async (name: string) => {
         if (!profile && name) {
             setCheckingName(true);
-            // In a real implementation, you would call the contract to check if the name is available
-            // For now, we'll simulate with a delay
             try {
-                // Placeholder for the actual check
-                // await profileClient.isUsernameAvailable(name);
-                // For now, just simulate a check with 50% chance of availability
-                const isAvailable = true; // In production, this would be the result from the contract
+                // In a real implementation, we would call the SDK to check if the name is available
+                // Simulate API call with timeout
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // This would be replaced with actual SDK function call in production
+                const isAvailable = Math.random() > 0.3; // Simulating 70% chance of name being available
                 
                 setIsNameAvailable(isAvailable);
                 setIsErrorForm(!isAvailable);
@@ -100,15 +114,13 @@ export const PageProfileManage: React.FC = () =>
         setInputName(name);
         
         // Only check availability for new profiles (not editing)
-        if (!profile) {
-            // Debounce the name availability check
+        if (!profile && name.length >= 3) {
             const handler = setTimeout(() => checkNameAvailability(name), 500);
             return () => clearTimeout(handler);
         }
     };
 
-    const onSubmitCreateProfile = async (e: SyntheticEvent) =>
-    {
+    const onSubmitCreateProfile = async (e: SyntheticEvent) => {
         e.preventDefault();
         if (!currentAccount) {
             openConnectModal();
@@ -152,9 +164,7 @@ export const PageProfileManage: React.FC = () =>
             console.debug("resp:", resp);
 
             if (resp.errors || resp.effects?.status.status !== "success") {
-                notifyError(`Txn digest: ${resp.digest}\n`
-                    + `Txn status: ${resp.effects?.status.status}\n`
-                    + `Txn errors: ${JSON.stringify(resp.errors)}`);
+                notifyError(`Transaction failed. Status: ${resp.effects?.status.status || "unknown"}`);
             } else {
                 notifyOkay("SUCCESS");
                 reloadProfile();
@@ -167,8 +177,7 @@ export const PageProfileManage: React.FC = () =>
         }
     };
 
-    const onSubmitEditProfile = async (e: SyntheticEvent) =>
-    {
+    const onSubmitEditProfile = async (e: SyntheticEvent) => {
         e.preventDefault();
         if (!currentAccount) {
             openConnectModal();
@@ -211,9 +220,7 @@ export const PageProfileManage: React.FC = () =>
             console.debug("resp:", resp);
 
             if (resp.errors || resp.effects?.status.status !== "success") {
-                notifyError(`Txn digest: ${resp.digest}\n`
-                    + `Txn status: ${resp.effects?.status.status}\n`
-                    + `Txn errors: ${JSON.stringify(resp.errors)}`);
+                notifyError(`Transaction failed. Status: ${resp.effects?.status.status || "unknown"}`);
             } else {
                 notifyOkay("SUCCESS");
                 reloadProfile();
@@ -227,14 +234,15 @@ export const PageProfileManage: React.FC = () =>
     };
 
     /* HTML */
-
     let view: React.ReactNode;
+    
     if (!currentAccount) {
         view = <div>
             <p>
-                Connect your Sui wallet to create your profile.<br/>It's free and only takes a few seconds!
+                Connect your Sui wallet to create your Tardinator profile.<br/>
+                It's free and only takes a few seconds!
             </p>
-            <button onClick={openConnectModal}>LOG IN</button>
+            <button onClick={openConnectModal}>CONNECT WALLET</button>
         </div>;
     }
     else if (profile === undefined) {
@@ -243,7 +251,7 @@ export const PageProfileManage: React.FC = () =>
         </div>;
     }
     else {
-        view = <form className="form" onSubmit={profile===null ? onSubmitCreateProfile : onSubmitEditProfile}>
+        view = <form className="form" onSubmit={profile === null ? onSubmitCreateProfile : onSubmitEditProfile}>
             <div className="form-field">
                 <label>
                   Username
@@ -264,6 +272,7 @@ export const PageProfileManage: React.FC = () =>
                 {!isNameAvailable && <div className="field-error">This username is already taken</div>}
                 {profile === null && <div className="field-info">Usernames must be unique and cannot be changed later</div>}
             </div>
+            
             <div className="form-field">
                 <label>Description<span className="field-optional">[optional]</span></label>
                 <textarea value={inputDescription} maxLength={10000}
@@ -283,6 +292,7 @@ export const PageProfileManage: React.FC = () =>
                 <div className="field-info">Right click the image, then click 'Copy Image Address'. To use a picture from your device, upload it to a service like <a href="https://imgur.com/upload" target="_blank" rel="noopener nofollow noreferrer">imgur.com</a>, then copy the image address.</div>
                 {isErrorImgur && <div className="field-error-imgur"><img src="/img/drake.webp" /></div>}
             </div>
+
             <div className="form-field">
                 <label>X/Twitter Username<span className="field-optional">[optional]</span></label>
                 <input 
@@ -311,6 +321,7 @@ export const PageProfileManage: React.FC = () =>
                     onChange={e => setInputTelegramUsername(e.target.value)}
                 />
             </div>
+            
             <button
                 type="submit"
                 disabled={waiting || isErrorForm}

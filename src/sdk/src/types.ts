@@ -10,6 +10,8 @@ export type TardinatorProfile = {
     name: string;
     imageUrl: string;
     description: string;
+    xAccount: string;
+    telegram: string;
     data: unknown;
     owner: string;
 };

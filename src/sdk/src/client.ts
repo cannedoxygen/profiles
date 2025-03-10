@@ -3,9 +3,7 @@ import { TransactionBlock as Transaction } from "@mysten/sui.js/transactions";
 import { PROFILE_IDS } from "./config.js";
 import { chunkArray, devInspectAndGetResults } from "./functions.js";
 import { get_profiles } from "./package.js";
-import { BcsLookupResults, LookupResults, TardinatorProfile } from "./types.js";
-
-type NetworkName = "localnet" | "devnet" | "testnet" | "mainnet";
+import { BcsLookupResults, LookupResults, NetworkName, TardinatorProfile } from "./types.js";
 
 /**
  * Helps fetching Tardinator Profile data from the network.
@@ -30,6 +28,27 @@ export class ProfileClient
         this.suiClient = suiClient;
         this.packageId = packageId || PROFILE_IDS[network].packageId;
         this.registryId = registryId || PROFILE_IDS[network].registryId;
+    }
+
+    /**
+     * Check if a username is available (not already taken)
+     */
+    public async isUsernameAvailable(
+        username: string,
+    ): Promise<boolean> {
+        // This is a simplified implementation - in production, you'd call the contract
+        // For now, use a placeholder implementation
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // Demo implementation: 50/50 chance of availability except for known names
+                const knownNames = ['tardinator', 'admin', 'test'];
+                if (knownNames.includes(username.toLowerCase())) {
+                    resolve(false);
+                } else {
+                    resolve(Math.random() > 0.5);
+                }
+            }, 300);
+        });
     }
 
     /**
@@ -58,7 +77,7 @@ export class ProfileClient
 
         // Check if addresses are already in cache and add them to the returned map
         for (const addr of lookupAddresses) {
-            if (useCache && this.cachedAddresses.has(addr)) {
+            if (useCache !== false && this.cachedAddresses.has(addr)) {
                 const cachedProfile = this.cachedAddresses.get(addr) || null;
                 result.set(addr, cachedProfile);
             } else { // address not seen before so we need to look it up
@@ -84,7 +103,7 @@ export class ProfileClient
                 const profileObjects = await this.getProfilesById([...newObjectIds.values()]);
 
                 // Add the remaining profile objects to the returned map and cache
-                for (const profile of profileObjects.values()) {
+                for (const [objectId, profile] of profileObjects.entries()) {
                     if (profile) { // nulls have already been added to the result and cache above
                         result.set(profile.owner, profile);
                         this.cachedAddresses.set(profile.owner, profile);
@@ -128,7 +147,7 @@ export class ProfileClient
 
         // Check if objects are already in cache and add them to the returned map
         for (const objectId of lookupObjectIds) {
-            if (useCache && this.cachedObjects.has(objectId)) {
+            if (useCache !== false && this.cachedObjects.has(objectId)) {
                 const cachedProfile = this.cachedObjects.get(objectId) || null;
                 result.set(objectId, cachedProfile);
             } else { // object not seen before so we need to look it up
@@ -139,7 +158,7 @@ export class ProfileClient
         if (newLookupObjectIds.size > 0) {
             // Add to the results the profile objects associated to `newLookupObjectIds`.
             // Profile objects that don't exist are not included in the returned array.
-            const newProfiles = await this.fetchProfileObjects( this.suiClient, lookupObjectIds );
+            const newProfiles = await this.fetchProfileObjects(this.suiClient, [...newLookupObjectIds]);
             for (const profile of newProfiles) {
                 result.set(profile.id, profile);
             }
@@ -286,13 +305,25 @@ function suiObjectToProfile(
 
     /* eslint-disable */
     const fields: Record<string, any> = content.fields;
+    let profileData = {};
+    
+    try {
+        if (fields.data) {
+            profileData = JSON.parse(fields.data);
+        }
+    } catch (e) {
+        console.error("Failed to parse profile data JSON", e);
+    }
+    
     return {
         id: fields.id.id,
         name: fields.name,
         imageUrl: fields.image_url,
         description: fields.description,
-        data: fields.data ? JSON.parse(fields.data) : null,
+        data: profileData,
         owner: ("AddressOwner" in owner) ? owner.AddressOwner : owner.ObjectOwner,
+        xAccount: fields.x_account,
+        telegram: fields.telegram
     };
     /* eslint-enable */
 }

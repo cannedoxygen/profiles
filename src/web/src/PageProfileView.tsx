@@ -1,5 +1,4 @@
 import { TardinatorProfile } from "@tardinator/profile-sdk";
-import { create_profile, edit_profile } from "@tardinator/profile-sdk";
 import { LinkToPolymedia } from "@polymedia/suitcase-react";
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
@@ -128,27 +127,27 @@ export const PageProfileView: React.FC = () =>
                         )}
                         
                         <div className="profile-social">
-                            {profile.xTwitter && (
+                            {profile.data && profile.data.xAccount && (
                                 <a 
-                                    href={`https://x.com/${profile.xTwitter}`} 
+                                    href={`https://x.com/${profile.data.xAccount}`} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="profile-social-link twitter"
                                 >
                                     <span className="social-icon">𝕏</span>
-                                    <span className="social-name">@{profile.xTwitter}</span>
+                                    <span className="social-name">@{profile.data.xAccount}</span>
                                 </a>
                             )}
                             
-                            {profile.telegram && (
+                            {profile.data && profile.data.telegramUsername && (
                                 <a 
-                                    href={`https://t.me/${profile.telegram}`} 
+                                    href={`https://t.me/${profile.data.telegramUsername}`} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="profile-social-link telegram"
                                 >
                                     <span className="social-icon">✈️</span>
-                                    <span className="social-name">@{profile.telegram}</span>
+                                    <span className="social-name">@{profile.data.telegramUsername}</span>
                                 </a>
                             )}
                         </div>
@@ -159,7 +158,7 @@ export const PageProfileView: React.FC = () =>
                     <div className="profile-section-wallet">
                         <h3 className="section-title">Wallet</h3>
                         <div className="wallet-address">
-                            Owner: <LinkToTardinator network={network} kind="address" addr={profile.owner} />
+                            Owner: <LinkToPolymedia network={network} kind="address" addr={profile.owner} />
                         </div>
                         <div className="wallet-balance">
                             <span className="balance-amount">{balance}</span>
@@ -171,10 +170,10 @@ export const PageProfileView: React.FC = () =>
                         <h3 className="section-title">On-Chain Data</h3>
                         <div className="registry-details">
                             <div>
-                                Profile ID: <LinkToTardinator network={network} kind="object" addr={profile.id} />
+                                Profile ID: <LinkToPolymedia network={network} kind="object" addr={profile.id} />
                             </div>
                             <div>
-                                Registry: <LinkToTardinator network={network} kind="object" addr={profileClient.registryId} />
+                                Registry: <LinkToPolymedia network={network} kind="object" addr={profileClient.registryId} />
                             </div>
                         </div>
                     </div>
